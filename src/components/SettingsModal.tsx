@@ -3,9 +3,11 @@ interface SettingsModalProps {
   onExport: () => void;
   onImport: () => void;
   onReset: () => void;
+  showHints: boolean;
+  onToggleHints: () => void;
 }
 
-function SettingsModal({ onClose, onExport, onImport, onReset }: SettingsModalProps) {
+function SettingsModal({ onClose, onExport, onImport, onReset, showHints, onToggleHints }: SettingsModalProps) {
   const handleReset = () => {
     if (confirm('Möchtest du wirklich alles zurücksetzen? Dein gesamter Fortschritt geht verloren!')) {
       onReset();
@@ -24,6 +26,22 @@ function SettingsModal({ onClose, onExport, onImport, onReset }: SettingsModalPr
           >
             ×
           </button>
+        </div>
+
+        <div className="settings-section">
+          <h3>🎮 Spieloptionen</h3>
+          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', cursor: 'pointer' }}>
+            <span>💡 Hinweise anzeigen</span>
+            <input
+              type="checkbox"
+              checked={showHints}
+              onChange={onToggleHints}
+              style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer' }}
+            />
+          </label>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+            Zeige kombinierbare Elemente
+          </p>
         </div>
 
         <div className="settings-section">

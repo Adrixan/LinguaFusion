@@ -665,3 +665,134 @@ input {
   0%, 100% { opacity: 0.6; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.2); }
 }
+
+/* ===== Collection Graph (react-flow DAG) ===== */
+
+.collection-graph-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 140px);
+}
+
+.collection-graph-header {
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.collection-graph-header .progress-text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.collection-graph-header .progress-bar-outer {
+  height: 6px;
+  background: var(--surface);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.collection-graph-header .progress-bar-inner {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.collection-graph-container {
+  flex: 1;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--background);
+}
+
+.collection-graph-container .react-flow__node {
+  cursor: pointer;
+}
+
+.graph-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  min-height: 52px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 2px solid #555;
+  background: var(--surface);
+  color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  text-align: center;
+  transition: box-shadow 0.2s ease;
+}
+
+.graph-node.discovered {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.graph-node.discovered:hover {
+  box-shadow: 0 0 12px rgba(244, 162, 97, 0.5);
+}
+
+.graph-node.undiscovered {
+  opacity: 0.45;
+  background: #2a2a3e;
+}
+
+.graph-node-symbol {
+  font-size: 1.3rem;
+  line-height: 1.2;
+}
+
+.graph-node-name {
+  font-size: 0.65rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90px;
+}
+
+.graph-tooltip {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--primary);
+  color: var(--text);
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  max-width: 340px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  cursor: pointer;
+  border: 1px solid var(--accent);
+}
+
+/* react-flow overrides for dark theme */
+.collection-graph-container .react-flow__controls button {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid #444;
+  border-bottom: none;
+}
+
+.collection-graph-container .react-flow__controls button:last-child {
+  border-bottom: 1px solid #444;
+}
+
+.collection-graph-container .react-flow__controls button:hover {
+  background: var(--primary);
+}
+
+.collection-graph-container .react-flow__controls svg {
+  fill: var(--text);
+}
+
+.collection-graph-container .react-flow__minimap {
+  border: 1px solid #444;
+  border-radius: 4px;
+}

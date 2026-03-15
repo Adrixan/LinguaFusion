@@ -8,6 +8,7 @@ interface CombinationAreaProps {
   pendingDiscovery: Element | null;
   unlockedElements: Element[];
   discoveredElements: string[];
+  showHints: boolean;
   onSelectElement: (id: string) => void;
   onCombine: () => void;
   onClear: () => void;
@@ -24,6 +25,7 @@ function CombinationArea({
   pendingDiscovery,
   unlockedElements,
   discoveredElements,
+  showHints,
   onSelectElement,
   onCombine,
   onClear,
@@ -34,9 +36,9 @@ function CombinationArea({
   useHint
 }: CombinationAreaProps) {
   const [showWordPuzzle, setShowWordPuzzle] = useState(false);
-  const [showHints, setShowHints] = useState(false);
 
-  const combinableElementIds = useMemo(() => {
+  // Elements that can combine with ANY other element to produce something undiscovered
+  const generallyCombinable = useMemo(() => {
     const combinableIds = new Set<string>();
     
     for (let i = 0; i < unlockedElements.length; i++) {
@@ -55,6 +57,23 @@ function CombinationArea({
     
     return combinableIds;
   }, [unlockedElements, discoveredElements]);
+
+  // Elements that combine with the currently selected element to produce something new
+  const combinableWithSelected = useMemo(() => {
+    if (selectedElements.length !== 1) return new Set<string>();
+    const selectedId = selectedElements[0];
+    const ids = new Set<string>();
+    const unlockedIds = new Set(unlockedElements.map(e => e.id));
+
+    for (const element of unlockedElements) {
+      const result = getCombinableElements(selectedId, element.id);
+      if (result && !discoveredElements.includes(result.id) && !unlockedIds.has(result.id)) {
+        ids.add(element.id);
+      }
+    }
+
+    return ids;
+  }, [selectedElements, unlockedElements, discoveredElements]);
 
   const getSelectedElement = (index: number): Element | null => {
     const id = selectedElements[index];
@@ -121,6 +140,8 @@ function CombinationArea({
       />
     );
   }
+
+  const hasSelection = selectedElements.length === 1;
 
   return (
     <div>
@@ -214,34 +235,21 @@ function CombinationArea({
       )}
 
       <h3 style={{ marginTop: '2rem', marginBottom: '1rem' }}>Wähle Elemente:</h3>
-      <div style={{ marginBottom: '1rem' }}>
-        <button
-          className="combine-btn"
-          onClick={() => setShowHints(!showHints)}
-          style={{ 
-            background: showHints ? 'var(--accent)' : 'var(--surface)',
-            color: showHints ? '#fff' : 'var(--text)',
-            fontSize: '0.9rem',
-            padding: '0.5rem 1rem'
-          }}
-        >
-          💡 Hinweis {showHints ? '(An)' : ''}
-        </button>
-      </div>
       <div className="element-grid">
         {unlockedElements.map(element => {
-          const isCombinable = combinableElementIds.has(element.id);
+          const isGenerallyCombinable = showHints && generallyCombinable.has(element.id);
+          const isTargetCombinable = showHints && hasSelection && combinableWithSelected.has(element.id);
           return (
           <div
             key={element.id}
             className={`element-card element-category-${element.category} ${
               selectedElements.includes(element.id) ? 'selected' : ''
-            } ${isCombinable ? 'hint-combinable' : ''} ${showHints && isCombinable ? 'hint-glow' : ''}`}
+            } ${isGenerallyCombinable && !hasSelection ? 'hint-combinable' : ''} ${isTargetCombinable ? 'hint-glow' : ''}`}
             onClick={() => onSelectElement(element.id)}
           >
             <div className="element-symbol">{element.symbol}</div>
             <div className="element-name">{element.name}</div>
-            {isCombinable && (
+            {isGenerallyCombinable && !hasSelection && (
               <div className="combinable-indicator">✨</div>
             )}
           </div>

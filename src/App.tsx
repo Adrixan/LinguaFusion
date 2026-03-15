@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useGame } from './hooks/useGame';
-import { elements, ElementCategory } from './data/elements';
+import { elements } from './data/elements';
 import { badges } from './data/badges';
-import ElementCard from './components/ElementCard';
+
+import CollectionGraph from './components/CollectionGraph';
 import CombinationArea from './components/CombinationArea';
 import BadgeDisplay from './components/BadgeDisplay';
 import TutorialOverlay from './components/TutorialOverlay';
@@ -35,21 +36,14 @@ function App() {
     importSave,
     resetGame,
     solveWord,
-    useHint
+    useHint,
+    toggleHints
   } = useGame();
 
   const [activeTab, setActiveTab] = useState<Tab>('combine');
   const [showSettings, setShowSettings] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<ElementCategory | 'all'>('all');
 
   const unlockedElements = elements.filter(e => gameState.unlockedElements.includes(e.id));
-  
-  const filteredElements = unlockedElements.filter(e => {
-    const matchesSearch = e.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || e.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
 
   const progress = Math.round((gameState.discoveredElements.length / elements.length) * 100);
 
@@ -141,6 +135,7 @@ function App() {
               pendingDiscovery={pendingDiscovery}
               unlockedElements={unlockedElements}
               discoveredElements={gameState.discoveredElements}
+              showHints={gameState.showHints}
               onSelectElement={selectElement}
               onCombine={handleCombine}
               onClear={clearSelection}
@@ -154,42 +149,11 @@ function App() {
         )}
 
         {activeTab === 'collection' && (
-          <div>
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Element suchen..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            
-            <div className="category-filter">
-              <button
-                className={`category-btn ${selectedCategory === 'all' ? 'active' : ''}`}
-                onClick={() => setSelectedCategory('all')}
-              >
-                Alle
-              </button>
-              {(['basic', 'nature', 'animal', 'plant', 'food', 'object', 'concept'] as ElementCategory[]).map(cat => (
-                <button
-                  key={cat}
-                  className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
-                  onClick={() => setSelectedCategory(cat)}
-                >
-                  {cat === 'basic' ? '🔴' : cat === 'nature' ? '🌿' : cat === 'animal' ? '🐾' : cat === 'plant' ? '🌸' : cat === 'food' ? '🍎' : cat === 'object' ? '🔧' : '💭'} {cat}
-                </button>
-              ))}
-            </div>
-
-            <div className="element-grid">
-              {filteredElements.map(element => (
-                <ElementCard
-                  key={element.id}
-                  element={element}
-                />
-              ))}
-            </div>
-          </div>
+          <CollectionGraph
+            elements={elements}
+            unlockedElements={gameState.unlockedElements}
+            discoveredElements={gameState.discoveredElements}
+          />
         )}
 
         {activeTab === 'badges' && (
@@ -214,6 +178,8 @@ function App() {
           onExport={handleExport}
           onImport={handleImport}
           onReset={resetGame}
+          showHints={gameState.showHints}
+          onToggleHints={toggleHints}
         />
       )}
 

@@ -16,6 +16,7 @@ export interface GameState {
   lastPlayed: string;
   totalPlayTime: number;
   lastSessionTime: number;
+  showHints: boolean;
 }
 
 const INITIAL_STATE: GameState = {
@@ -31,7 +32,8 @@ const INITIAL_STATE: GameState = {
   badges: [],
   lastPlayed: new Date().toISOString(),
   totalPlayTime: 0,
-  lastSessionTime: Date.now()
+  lastSessionTime: Date.now(),
+  showHints: true
 };
 
 const STORAGE_KEY = 'alchemie-fusion-save';
@@ -241,14 +243,12 @@ export function useGame() {
     const pendingElement = pendingDiscovery;
     if (!pendingElement) return null;
 
-    setGameState(prev => {
-      const isAlreadyUnlocked = prev.unlockedElements.includes(pendingElement.id);
-      const newUnlocked = !isAlreadyUnlocked
-        ? [...prev.unlockedElements, pendingElement.id]
-        : prev.unlockedElements;
-      
-      return { ...prev, unlockedElements: newUnlocked };
-    });
+    // Remove from discoveredElements so the player can re-combine to try the puzzle again
+    setGameState(prev => ({
+      ...prev,
+      discoveredElements: prev.discoveredElements.filter(id => id !== pendingElement.id),
+    }));
+    setPendingDiscovery(null);
 
     return pendingElement;
   }, [pendingDiscovery]);
@@ -321,6 +321,10 @@ export function useGame() {
     setPendingDiscovery(null);
   }, []);
 
+  const toggleHints = useCallback(() => {
+    setGameState(prev => ({ ...prev, showHints: !prev.showHints }));
+  }, []);
+
   return {
     gameState,
     selectedElements,
@@ -342,6 +346,7 @@ export function useGame() {
     exportSave,
     importSave,
     resetGame,
-    checkBadges
+    checkBadges,
+    toggleHints
   };
 }
