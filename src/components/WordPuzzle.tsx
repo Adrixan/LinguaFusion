@@ -12,19 +12,14 @@ interface WordPuzzleProps {
 function WordPuzzle({ element, onComplete, onSkip, solveWord, useHint }: WordPuzzleProps) {
   const [guess, setGuess] = useState('');
   const [attempts, setAttempts] = useState(0);
-  const [showHint, setShowHint] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [usedHint, setUsedHint] = useState(false);
 
   const word = element.name.toUpperCase();
   const letters = word.split('');
 
   useEffect(() => {
-    if (showHint) {
-      setUsedHint(true);
-      useHint();
-    }
-  }, [showHint, useHint]);
+    useHint();
+  }, [useHint]);
 
   const handleGuess = () => {
     setAttempts(prev => prev + 1);
@@ -32,11 +27,8 @@ function WordPuzzle({ element, onComplete, onSkip, solveWord, useHint }: WordPuz
     
     if (upperGuess === word) {
       setIsCorrect(true);
-      solveWord(element.id, usedHint);
+      solveWord(element.id, true);
     } else {
-      if (attempts >= 1 && !showHint) {
-        setShowHint(true);
-      }
       setGuess('');
     }
   };
@@ -73,7 +65,7 @@ function WordPuzzle({ element, onComplete, onSkip, solveWord, useHint }: WordPuz
         {letters.map((_, index) => (
           <div 
             key={index} 
-            className={`letter-box ${showHint ? 'revealed' : ''}`}
+            className="letter-box"
           >
             {'_'}
           </div>
@@ -83,6 +75,10 @@ function WordPuzzle({ element, onComplete, onSkip, solveWord, useHint }: WordPuz
       <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '1rem' }}>
         Tipp: {element.symbol} - {letters.length} Buchstaben
       </p>
+
+      <div className="hint-text">
+        <p>💡 Hinweis: {element.hint}</p>
+      </div>
 
       <div className="guess-input">
         <input
@@ -105,22 +101,7 @@ function WordPuzzle({ element, onComplete, onSkip, solveWord, useHint }: WordPuz
         </p>
       )}
 
-      {showHint && (
-        <div className="hint-text">
-          <p>💡 Hinweis: {element.hint}</p>
-        </div>
-      )}
-
       <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
-        {!showHint && attempts >= 1 && (
-          <button 
-            className="submit-btn"
-            onClick={() => setShowHint(true)}
-            style={{ background: 'var(--warning)', color: 'var(--background)' }}
-          >
-            💡 Hinweis verwenden
-          </button>
-        )}
         <button 
           className="submit-btn"
           onClick={onSkip}

@@ -46,7 +46,7 @@ export const badges: Badge[] = [
     description: 'Entdecke alle Elemente',
     icon: '⚗️',
     condition: 'discovered',
-    requirement: 350
+    requirement: 216
   },
   {
     id: 'first-word',
@@ -118,7 +118,7 @@ export const badges: Badge[] = [
     description: 'Entdecke alle Naturelemente',
     icon: '🌿',
     condition: 'category-nature',
-    requirement: 20
+    requirement: 46
   },
   {
     id: 'basic-animal',
@@ -126,7 +126,7 @@ export const badges: Badge[] = [
     description: 'Entdecke alle Tierelemente',
     icon: '🐾',
     condition: 'category-animal',
-    requirement: 30
+    requirement: 29
   },
   {
     id: 'basic-plant',
@@ -134,7 +134,7 @@ export const badges: Badge[] = [
     description: 'Entdecke alle Pflanzenelemente',
     icon: '🌸',
     condition: 'category-plant',
-    requirement: 20
+    requirement: 14
   },
   {
     id: 'basic-food',
@@ -142,7 +142,7 @@ export const badges: Badge[] = [
     description: 'Entdecke alle Food-Elemente',
     icon: '🍎',
     condition: 'category-food',
-    requirement: 25
+    requirement: 19
   },
   {
     id: 'basic-object',
@@ -150,7 +150,7 @@ export const badges: Badge[] = [
     description: 'Entdecke alle Objekt-Elemente',
     icon: '🔧',
     condition: 'category-object',
-    requirement: 40
+    requirement: 75
   },
   {
     id: 'basic-concept',
@@ -158,7 +158,7 @@ export const badges: Badge[] = [
     description: 'Entdecke alle Konzept-Elemente',
     icon: '💭',
     condition: 'category-concept',
-    requirement: 35
+    requirement: 33
   },
   {
     id: 'streak-3',
