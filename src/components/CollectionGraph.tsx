@@ -1,6 +1,7 @@
 import { useMemo, useCallback, useState } from 'react';
 import {
   ReactFlow,
+  ReactFlowInstance,
   Background,
   Controls,
   MiniMap,
@@ -161,6 +162,18 @@ function CollectionGraph({
 
   const onPaneClick = useCallback(() => setTooltip(null), []);
 
+  const basicNodes = useMemo(
+    () => initialNodes.filter((n) => ['feuer', 'wasser', 'erde', 'luft'].includes(n.id)),
+    [initialNodes],
+  );
+
+  const onInit = useCallback(
+    (instance: ReactFlowInstance) => {
+      instance.fitView({ nodes: basicNodes, maxZoom: 1.2, padding: 0.5 });
+    },
+    [basicNodes],
+  );
+
   const progress = Math.round((discoveredElements.length / elements.length) * 100);
 
   return (
@@ -183,7 +196,7 @@ function CollectionGraph({
           nodeTypes={nodeTypes}
           onNodeClick={onNodeClick}
           onPaneClick={onPaneClick}
-          fitView
+          onInit={onInit}
           minZoom={0.1}
           maxZoom={2}
           proOptions={{ hideAttribution: true }}

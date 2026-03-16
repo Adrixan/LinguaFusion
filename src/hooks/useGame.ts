@@ -21,7 +21,7 @@ export interface GameState {
 
 const INITIAL_STATE: GameState = {
   unlockedElements: ['feuer', 'wasser', 'erde', 'luft'],
-  discoveredElements: [],
+  discoveredElements: ['feuer', 'wasser', 'erde', 'luft'],
   combinations: 0,
   wordsSolved: 0,
   hintsUsed: 0,

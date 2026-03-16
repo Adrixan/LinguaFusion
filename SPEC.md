@@ -48,18 +48,28 @@
 ### Element-Kombination
 - 4 Grundelemente zu Beginn: Feuer, Wasser, Erde, Luft
 - Kombination erzeugt neues Element
-- 350+ Elemente mit eindeutigen Kombinationen
+- 220 Elemente mit eindeutigen Kombinationen
 
 ### Buchstabenrätsel
 - Nach jeder neuen Elementfreischaltung
 - Buchstabenkästen zeigen _ _ _ _
 - Spieler muss Buchstaben eingeben
-- 2 Versuche, dann Hinweis
+- Definitions-Hinweis wird sofort angezeigt
 
 ### Tutorial
 - Erklärt Grundmechanik
 - Schrittweise Freischaltung
 - Belohnungen nach Abschluss
+
+### Sammlung (Interaktiver DAG-Graph)
+- Visualisierung aller entdeckten Elemente als gerichteter azyklischer Graph
+- Powered by @xyflow/react (react-flow) und dagre für automatisches Layout
+- Pan, Zoom und Klick auf Knoten
+- Zeigt Abhängigkeiten und Kombinationspfade
+
+### Element-Hervorhebung
+- Bei Auswahl eines Elements leuchten kombinierbare Partner-Elemente auf
+- Ein-/ausschaltbar in den Einstellungen
 
 ### Badges
 - Verschiedene Kategorien
@@ -72,11 +82,14 @@
 - Import aus JSON
 
 ## Akzeptanzkriterien
-- [ ] PWA installierbar
-- [ ] Alle 350+ Elemente funktionieren
+- [ ] PWA installierbar und offline nutzbar
+- [ ] Alle 220 Elemente funktionieren
 - [ ] Buchstabenrätsel zeigt _ für jeden Buchstaben
-- [ ] Hinweis nach erstem Fehlversuch
+- [ ] Definitions-Hinweis wird sofort angezeigt
 - [ ] Feier bei Abschluss
 - [ ] LocalStorage funktioniert
 - [ ] Export/Import funktioniert
-- [ ] Alle Badges erreichbar
+- [ ] Alle 30+ Badges erreichbar
+- [ ] Sammlung-DAG-Graph zeigt entdeckte Elemente korrekt an
+- [ ] Element-Hervorhebung funktioniert und ist in Einstellungen ein-/ausschaltbar
+- [ ] Responsive auf Mobile, Tablet und Desktop
