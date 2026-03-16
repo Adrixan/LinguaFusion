@@ -7,7 +7,7 @@ interface TutorialOverlayProps {
 const tutorialSteps = [
   {
     number: 1,
-    title: 'Willkommen bei Alchemie Fusion!',
+    title: 'Willkommen bei LinguaFusion!',
     content: 'Entdecke neue Elemente durch Kombination. Du beginnst mit den 4 Grundelementen: Feuer, Wasser, Erde und Luft.'
   },
   {

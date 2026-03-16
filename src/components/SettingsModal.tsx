@@ -68,7 +68,7 @@ function SettingsModal({ onClose, onExport, onImport, onReset, showHints, onTogg
         <div className="settings-section">
           <h3>ℹ️ Über das Spiel</h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            Alchemie Fusion v1.0.0<br/>
+            LinguaFusion v1.0.0<br/>
             Ein Element-Kombinationsspiel<br/>
             Made with ❤️
           </p>

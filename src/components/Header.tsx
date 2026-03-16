@@ -9,7 +9,7 @@ function Header({ progress, onSettingsClick, onExportClick, onImportClick }: Hea
   return (
     <header className="header">
       <div>
-        <h1>⚗️ Alchemie Fusion</h1>
+        <h1>🔤 LinguaFusion</h1>
         <div className="progress-bar" style={{ width: '200px' }}>
           <div className="progress-fill" style={{ width: `${progress}%` }} />
         </div>

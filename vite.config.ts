@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png', 'manifest.json'],
       manifest: {
-        name: 'Alchemie Fusion',
-        short_name: 'Alchemie',
-        description: 'Entdecke neue Elemente durch Kombination!',
+        name: 'LinguaFusion',
+        short_name: 'LinguaFusion',
+        description: 'Lerne Deutsch durch das Kombinieren von Elementen!',
         theme_color: '#2D1B4E',
         background_color: '#1A1A2E',
         display: 'standalone',
