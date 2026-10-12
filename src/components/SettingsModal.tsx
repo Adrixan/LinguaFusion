@@ -1,3 +1,5 @@
+import Modal from './Modal';
+
 interface SettingsModalProps {
   onClose: () => void;
   onExport: () => void;
@@ -9,19 +11,17 @@ interface SettingsModalProps {
 
 function SettingsModal({ onClose, onExport, onImport, onReset, showHints, onToggleHints }: SettingsModalProps) {
   const handleReset = () => {
-    if (confirm('Möchtest du wirklich alles zurücksetzen? Dein gesamter Fortschritt geht verloren!')) {
-      onReset();
-      onClose();
-    }
+    onReset();
+    onClose();
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()}>
+    <Modal ariaLabel="Einstellungen" onClose={onClose}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2>⚙️ Einstellungen</h2>
-          <button 
+          <button
             onClick={onClose}
+            aria-label="Schließen"
             style={{ background: 'transparent', color: 'var(--text-muted)', fontSize: '1.5rem' }}
           >
             ×
@@ -68,13 +68,12 @@ function SettingsModal({ onClose, onExport, onImport, onReset, showHints, onTogg
         <div className="settings-section">
           <h3>ℹ️ Über das Spiel</h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            LinguaFusion v1.0.0<br/>
+            LinguaFusion v{__APP_VERSION__}<br/>
             Ein Element-Kombinationsspiel<br/>
             Made with ❤️
           </p>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 

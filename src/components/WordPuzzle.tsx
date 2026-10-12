@@ -1,119 +1,91 @@
-import { useState, useEffect } from 'react';
+import { FormEvent, useId, useState } from 'react';
 import { Element } from '../data/elements';
+import { isCorrectGuess, normalizeWord } from '../game/words';
 
 interface WordPuzzleProps {
   element: Element;
-  onComplete: (element: Element) => void;
+  /** Called with the number of wrong guesses made before the correct one. */
+  onSolve: (wrongAttempts: number) => void;
   onSkip: () => void;
-  solveWord: (elementId: string, usedHint: boolean) => void;
-  useHint: () => void;
 }
 
-function WordPuzzle({ element, onComplete, onSkip, solveWord, useHint }: WordPuzzleProps) {
+function WordPuzzle({ element, onSolve, onSkip }: WordPuzzleProps) {
   const [guess, setGuess] = useState('');
-  const [attempts, setAttempts] = useState(0);
-  const [isCorrect, setIsCorrect] = useState(false);
+  const [wrongAttempts, setWrongAttempts] = useState(0);
+  const inputId = useId();
 
-  const word = element.name.toUpperCase();
-  const letters = word.split('');
+  const letterCount = [...element.name].length;
 
-  useEffect(() => {
-    useHint();
-  }, [useHint]);
-
-  const handleGuess = () => {
-    setAttempts(prev => prev + 1);
-    const upperGuess = guess.toUpperCase().trim();
-    
-    if (upperGuess === word) {
-      setIsCorrect(true);
-      solveWord(element.id, true);
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    if (guess.trim() === '') return;
+    if (isCorrectGuess(guess, element.name)) {
+      onSolve(wrongAttempts);
     } else {
+      setWrongAttempts(count => count + 1);
       setGuess('');
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleGuess();
-    }
-  };
+  return (
+    <div className="pending-discovery">
+      <h2>✨ Neue Entdeckung!</h2>
+      <div className="element-symbol" style={{ fontSize: '4rem', margin: '1rem 0' }} aria-hidden="true">
+        {element.symbol}
+      </div>
+      <p>Wie heißt dieses Element? Errate den Namen!</p>
 
-  if (isCorrect) {
-    return (
-      <div className="modal-overlay">
-        <div className="modal celebration-content">
-          <div className="celebration-icon">🎉</div>
-          <h2>Richtig!</h2>
-          <p>Das Element ist: <strong>{element.name}</strong></p>
-          <p style={{ color: 'var(--success)', marginTop: '1rem' }}>
-            +1 neues Element freigeschaltet!
+      <div style={{ padding: '1rem' }}>
+        <div className="letter-boxes" aria-hidden="true">
+          {Array.from({ length: letterCount }, (_, index) => (
+            <div key={index} className="letter-box">_</div>
+          ))}
+        </div>
+
+        <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+          {letterCount} Buchstaben
+        </p>
+
+        <div className="hint-text">
+          <p>💡 Hinweis: {element.hint}</p>
+        </div>
+
+        <form className="guess-input" onSubmit={handleSubmit}>
+          <label htmlFor={inputId} className="sr-only">Name des Elements</label>
+          <input
+            id={inputId}
+            type="text"
+            value={guess}
+            onChange={event => setGuess(event.target.value)}
+            placeholder="Dein Tipp..."
+            maxLength={normalizeWord(element.name).length}
+            lang="de"
+            autoComplete="off"
+            autoCapitalize="characters"
+            autoCorrect="off"
+            spellCheck={false}
+            style={{ textTransform: 'uppercase' }}
+            autoFocus
+          />
+          <button type="submit" className="submit-btn">Prüfen</button>
+        </form>
+
+        {wrongAttempts > 0 && (
+          <p role="alert" style={{ textAlign: 'center', color: 'var(--error)', marginBottom: '1rem' }}>
+            Leider falsch! Versuche es nochmal.
           </p>
-          <button className="combine-btn" onClick={() => onComplete(element)} autoFocus>
-            Weiter
+        )}
+
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
+          <button type="button" className="submit-btn secondary" onClick={onSkip}>
+            Überspringen
           </button>
         </div>
-      </div>
-    );
-  }
 
-  return (
-    <div style={{ padding: '1rem' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '1rem' }}>Wie heißt das Element?</h2>
-      
-      <div className="letter-boxes">
-        {letters.map((_, index) => (
-          <div 
-            key={index} 
-            className="letter-box"
-          >
-            {'_'}
-          </div>
-        ))}
-      </div>
-
-      <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-        Tipp: {element.symbol} - {letters.length} Buchstaben
-      </p>
-
-      <div className="hint-text">
-        <p>💡 Hinweis: {element.hint}</p>
-      </div>
-
-      <div className="guess-input">
-        <input
-          type="text"
-          value={guess}
-          onChange={(e) => setGuess(e.target.value.toUpperCase())}
-          onKeyPress={handleKeyPress}
-          placeholder="Dein Tipp..."
-          maxLength={letters.length}
-          autoFocus
-        />
-        <button className="submit-btn" onClick={handleGuess}>
-          Prüfen
-        </button>
-      </div>
-
-      {attempts > 0 && (
-        <p style={{ textAlign: 'center', color: 'var(--error)', marginBottom: '1rem' }}>
-          Leider falsch! Versuche es nochmal.
+        <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '1rem' }}>
+          Fehlversuche: {wrongAttempts}
         </p>
-      )}
-
-      <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
-        <button 
-          className="submit-btn"
-          onClick={onSkip}
-          style={{ background: 'var(--surface)' }}
-        >
-          Überspringen
-        </button>
       </div>
-
-      <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '1rem' }}>
-        Versuche: {attempts}/2
-      </p>
     </div>
   );
 }

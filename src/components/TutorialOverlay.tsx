@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Modal from './Modal';
 
 interface TutorialOverlayProps {
   onComplete: () => void;
@@ -13,17 +14,17 @@ const tutorialSteps = [
   {
     number: 2,
     title: 'Kombiniere Elemente',
-    content: 'Wähle zwei Elemente aus und kombiniere sie, um neue Elemente zu entdecken. Probier zum Beispiel Feuer + Wasser = Dampf!'
+    content: 'Wähle zwei Elemente aus und kombiniere sie, um neue Elemente zu entdecken. Probier zum Beispiel Feuer + Wasser = Dampf! Du kannst auch ein Element mit sich selbst kombinieren, zum Beispiel Wasser + Wasser.'
   },
   {
     number: 3,
     title: 'Buchstabenrätsel',
-    content: 'Wenn du ein neues Element entdeckst, siehst du nur das Symbol. Errate den Namen, um es freizuschalten! Du hast 2 Versuche.'
+    content: 'Wenn du ein neues Element entdeckst, siehst du das Symbol und eine Beschreibung. Tippe den deutschen Namen ein, um es freizuschalten. Umlaute darfst du auch mit ae, oe, ue und ss schreiben.'
   },
   {
     number: 4,
-    title: 'Hinweise',
-    content: 'Nach dem ersten falschen Versuch erscheint ein Hinweis, der dir hilft, das Element zu erraten.'
+    title: 'Versuche und Überspringen',
+    content: 'Du hast unbegrenzt viele Versuche. Nur Rätsel, die du gleich beim ersten Tipp löst, zählen als perfekt. Wenn du nicht weiterkommst, kannst du überspringen und das Element später erneut finden.'
   },
   {
     number: 5,
@@ -50,12 +51,12 @@ function TutorialOverlay({ onComplete }: TutorialOverlayProps) {
   const step = tutorialSteps[currentStep];
 
   return (
-    <div className="modal-overlay">
-      <div className="modal">
+    <Modal ariaLabel="Tutorial" onClose={handleSkip}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2>📚 Tutorial</h2>
-          <button 
+          <button
             onClick={handleSkip}
+            aria-label="Tutorial überspringen"
             style={{ background: 'transparent', color: 'var(--text-muted)', fontSize: '1.5rem' }}
           >
             ×
@@ -102,8 +103,7 @@ function TutorialOverlay({ onComplete }: TutorialOverlayProps) {
             {currentStep === tutorialSteps.length - 1 ? 'Loslegen!' : 'Weiter'}
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
