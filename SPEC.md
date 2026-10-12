@@ -1,7 +1,7 @@
-# Alchemie-Spiel Spezifikation
+# LinguaFusion Spezifikation
 
 ## Projektübersicht
-- **Projektname**: Alchemie Fusion
+- **Projektname**: LinguaFusion
 - **Typ**: Progressive Web App (PWA) Spiel
 - **Kernfunktion**: Element-Kombinationsspiel mit Buchstabenrätseln
 - **Zielgruppe**: Deutschsprachige Spieler (österreichisches Deutsch)
@@ -53,8 +53,12 @@
 ### Buchstabenrätsel
 - Nach jeder neuen Elementfreischaltung
 - Buchstabenkästen zeigen _ _ _ _
-- Spieler muss Buchstaben eingeben
+- Spieler tippt den deutschen Namen ein; Umlaute dürfen als ae/oe/ue/ss geschrieben werden
 - Definitions-Hinweis wird sofort angezeigt
+- Unbegrenzte Versuche; Lösen beim ersten Versuch zählt als perfekt
+- Überspringen gibt das Element zurück: es muss erneut gefunden werden
+- Ein offenes Rätsel bleibt nach dem Neuladen erhalten
+- Elemente dürfen mit sich selbst kombiniert werden (z. B. Feuer + Feuer)
 
 ### Tutorial
 - Erklärt Grundmechanik
@@ -62,7 +66,7 @@
 - Belohnungen nach Abschluss
 
 ### Sammlung (Interaktiver DAG-Graph)
-- Visualisierung aller entdeckten Elemente als gerichteter azyklischer Graph
+- Visualisierung aller Elemente als gerichteter azyklischer Graph; Kanten und Namen erscheinen erst nach der Entdeckung (keine Rezept-Spoiler)
 - Powered by @xyflow/react (react-flow) und dagre für automatisches Layout
 - Pan, Zoom und Klick auf Knoten
 - Zeigt Abhängigkeiten und Kombinationspfade
@@ -72,14 +76,15 @@
 - Ein-/ausschaltbar in den Einstellungen
 
 ### Badges
-- Verschiedene Kategorien
+- 27 Abzeichen, alle erreichbar; Bedingungen werden zentral im Spielzustand ausgewertet
 - Sammelbar durch Erfolge
 - Anzeige in Galerie
 
 ### Datenspeicherung
-- LocalStorage für Spielstand
+- LocalStorage für Spielstand (Schlüssel `linguafusion-save`, alter Schlüssel `alchemie-fusion-save` wird migriert)
+- Validierung beim Laden und Import; beschädigte Spielstände werden gesichert
 - Export als JSON
-- Import aus JSON
+- Import aus JSON (max. 1 MB, mit Bestätigung)
 
 ## Akzeptanzkriterien
 - [ ] PWA installierbar und offline nutzbar
@@ -89,7 +94,7 @@
 - [ ] Feier bei Abschluss
 - [ ] LocalStorage funktioniert
 - [ ] Export/Import funktioniert
-- [ ] Alle 30+ Badges erreichbar
+- [x] Alle 27 Badges erreichbar (Test: Durchspielen im Reducer)
 - [ ] Sammlung-DAG-Graph zeigt entdeckte Elemente korrekt an
 - [ ] Element-Hervorhebung funktioniert und ist in Einstellungen ein-/ausschaltbar
 - [ ] Responsive auf Mobile, Tablet und Desktop
