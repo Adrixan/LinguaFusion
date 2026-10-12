@@ -1,2 +1,6 @@
-# Generated PWA service worker
+node_modules
+dist
+.scratch/*.log
+test-results
+playwright-report
 public/sw.js
