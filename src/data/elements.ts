@@ -22,7 +22,7 @@ export const elements: Element[] = [
   { id: 'meer', name: 'Meer', symbol: '🌊', hint: 'Riesige Wasserfläche mit Salzwasser', combinations: [['wasser', 'wasser']], category: 'nature' },
   { id: 'schlamm', name: 'Schlamm', symbol: '🟤', hint: 'Nasse, weiche Mischung aus Wasser und Erde', combinations: [['wasser', 'erde']], category: 'nature' },
   { id: 'regen', name: 'Regen', symbol: '🌧️', hint: 'Tropfen, die aus den Wolken fallen', combinations: [['wasser', 'luft']], category: 'nature' },
-  { id: 'stein', name: 'Stein', symbol: '🪨', hint: 'Hartes, festes Stück Gestein', combinations: [['erde', 'erde']], category: 'nature' },
+  { id: 'stein', name: 'Stein', symbol: '🪨', hint: 'Hartes, festes Stück Fels', combinations: [['erde', 'erde']], category: 'nature' },
   { id: 'staub', name: 'Staub', symbol: '🌫️', hint: 'Feine, trockene Teilchen in der Luft', combinations: [['erde', 'luft']], category: 'nature' },
   { id: 'wind', name: 'Wind', symbol: '🌬️', hint: 'Sich bewegende Luft', combinations: [['luft', 'luft']], category: 'nature' },
   { id: 'wolke', name: 'Wolke', symbol: '☁️', hint: 'Weißes Gebilde am Himmel aus Wassertröpfchen', combinations: [['dampf', 'luft']], category: 'nature' },
@@ -63,7 +63,7 @@ export const elements: Element[] = [
   { id: 'diamant', name: 'Diamant', symbol: '💎', hint: 'Härtester und wertvollster Edelstein', combinations: [['kohle', 'erde']], category: 'nature' },
   { id: 'nacht', name: 'Nacht', symbol: '🌃', hint: 'Dunkle Zeit zwischen Sonnenuntergang und Aufgang', combinations: [['schatten', 'zeit']], category: 'nature' },
   // Pflanzen (14)
-  { id: 'pflanze', name: 'Pflanze', symbol: '��', hint: 'Grünes Lebewesen, das im Boden wächst', combinations: [['regen', 'erde']], category: 'plant' },
+  { id: 'pflanze', name: 'Pflanze', symbol: '🌱', hint: 'Grünes Lebewesen, das im Boden wächst', combinations: [['regen', 'erde']], category: 'plant' },
   { id: 'alge', name: 'Alge', symbol: '🦠', hint: 'Einfache Wasserpflanze ohne echte Blätter', combinations: [['pflanze', 'wasser']], category: 'plant' },
   { id: 'baum', name: 'Baum', symbol: '🌳', hint: 'Große Pflanze mit Stamm und Blätterkrone', combinations: [['pflanze', 'pflanze']], category: 'plant' },
   { id: 'samen', name: 'Samen', symbol: '🫘', hint: 'Kleines Korn, aus dem eine neue Pflanze wächst', combinations: [['pflanze', 'wind']], category: 'plant' },
@@ -157,7 +157,7 @@ export const elements: Element[] = [
   { id: 'schiff', name: 'Schiff', symbol: '🚢', hint: 'Großes Fahrzeug für weite Seereisen', combinations: [['boot', 'holz']], category: 'object' },
   { id: 'bruecke', name: 'Brücke', symbol: '🌉', hint: 'Bauwerk, das über einen Fluss führt', combinations: [['stein', 'fluss']], category: 'object' },
   { id: 'wagen', name: 'Wagen', symbol: '🛒', hint: 'Fahrzeug mit Rädern zum Transport', combinations: [['rad', 'holz']], category: 'object' },
-  { id: 'uhr', name: 'Uhr', symbol: '⏰', hint: 'Gerät, das die Uhrzeit anzeigt', combinations: [['rad', 'metall']], category: 'object' },
+  { id: 'uhr', name: 'Uhr', symbol: '⏰', hint: 'Gerät, das anzeigt, wie spät es ist', combinations: [['rad', 'metall']], category: 'object' },
   { id: 'leiter', name: 'Leiter', symbol: '🪜', hint: 'Gerät mit Sprossen zum Klettern', combinations: [['holz', 'holz']], category: 'object' },
   { id: 'glocke', name: 'Glocke', symbol: '🔔', hint: 'Metallgegenstand, der beim Schlagen klingt', combinations: [['metall', 'luft']], category: 'object' },
   { id: 'kette', name: 'Kette', symbol: '⛓️', hint: 'Verbundene Glieder aus hartem Material', combinations: [['nagel', 'nagel']], category: 'object' },
@@ -205,7 +205,7 @@ export const elements: Element[] = [
   { id: 'bibliothek', name: 'Bibliothek', symbol: '📕', hint: 'Gebäude mit vielen Büchern zum Ausleihen', combinations: [['haus', 'buch']], category: 'object' },
   // Konzepte (33)
   { id: 'energie', name: 'Energie', symbol: '⚡', hint: 'Unsichtbare Kraft, die Dinge antreibt', combinations: [['feuer', 'feuer']], category: 'concept' },
-  { id: 'leben', name: 'Leben', symbol: '❤️', hint: 'Zustand eines lebenden Wesens', combinations: [['energie', 'wasser']], category: 'concept' },
+  { id: 'leben', name: 'Leben', symbol: '❤️', hint: 'Zustand eines Wesens, das atmet und wächst', combinations: [['energie', 'wasser']], category: 'concept' },
   { id: 'zeit', name: 'Zeit', symbol: '⏳', hint: 'Vergeht ständig und ist nicht aufzuhalten', combinations: [['sand', 'glas']], category: 'concept' },
   { id: 'licht', name: 'Licht', symbol: '☀️', hint: 'Helle Strahlung, die alles sichtbar macht', combinations: [['lampe', 'energie']], category: 'concept' },
   { id: 'schatten', name: 'Schatten', symbol: '👤', hint: 'Dunkle Fläche, wo Licht blockiert wird', combinations: [['licht', 'stein']], category: 'concept' },
@@ -239,27 +239,21 @@ export const elements: Element[] = [
   { id: 'fest', name: 'Fest', symbol: '🎉', hint: 'Fröhliche Feier mit vielen Menschen', combinations: [['musik', 'haus']], category: 'concept' },
 ];
 
-export const getElementById = (id: string): Element | undefined => {
-  return elements.find(e => e.id === id);
-};
+const elementsById = new Map<string, Element>(elements.map(e => [e.id, e]));
 
-export const getElementsByCategory = (category: ElementCategory): Element[] => {
-  return elements.filter(e => e.category === category);
-};
+const recipeKey = (a: string, b: string): string => (a < b ? `${a}+${b}` : `${b}+${a}`);
 
-export const getUnlockedElements = (unlockedIds: string[]): Element[] => {
-  return elements.filter(e => unlockedIds.includes(e.id));
-};
-
-export const getCombinableElements = (element1Id: string, element2Id: string): Element | undefined => {
-  const comboKey = [element1Id, element2Id].sort().join('+');
-  for (const e of elements) {
-    for (const combo of e.combinations) {
-      const sortedCombo = [...combo].sort().join('+');
-      if (sortedCombo === comboKey) {
-        return e;
-      }
-    }
+// Order-independent lookup table, built once: pair of ingredient ids -> resulting element.
+const recipeIndex = new Map<string, Element>();
+for (const element of elements) {
+  for (const [a, b] of element.combinations) {
+    recipeIndex.set(recipeKey(a, b), element);
   }
-  return undefined;
-};
+}
+
+export const BASIC_ELEMENT_IDS: readonly string[] = elements.filter(e => e.category === 'basic').map(e => e.id);
+
+export const getElementById = (id: string): Element | undefined => elementsById.get(id);
+
+export const getCombinableElements = (element1Id: string, element2Id: string): Element | undefined =>
+  recipeIndex.get(recipeKey(element1Id, element2Id));

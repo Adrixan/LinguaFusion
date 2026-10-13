@@ -11,6 +11,8 @@ function StatsDisplay({ gameState, totalElements, onReset }: StatsDisplayProps) 
   const playTimeHours = Math.floor(playTimeMinutes / 60);
   const remainingMinutes = playTimeMinutes % 60;
 
+  const progress = Math.round((gameState.unlockedElements.length / totalElements) * 100);
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('de-AT', { 
@@ -25,10 +27,6 @@ function StatsDisplay({ gameState, totalElements, onReset }: StatsDisplayProps) 
   return (
     <div>
       <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-value">{gameState.discoveredElements.length}</div>
-          <div className="stat-label">Entdeckte Elemente</div>
-        </div>
         <div className="stat-card">
           <div className="stat-value">{gameState.unlockedElements.length}</div>
           <div className="stat-label">Freigeschaltete Elemente</div>
@@ -58,22 +56,22 @@ function StatsDisplay({ gameState, totalElements, onReset }: StatsDisplayProps) 
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
             <span>Fortschritt:</span>
             <span style={{ color: 'var(--accent)' }}>
-              {Math.round((gameState.discoveredElements.length / totalElements) * 100)}%
+              {progress}%
             </span>
           </div>
           <div className="progress-bar">
             <div 
               className="progress-fill" 
-              style={{ width: `${(gameState.discoveredElements.length / totalElements) * 100}%` }}
+              style={{ width: `${progress}%` }}
             />
           </div>
         </div>
 
         <div style={{ marginTop: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
           <div>
-            <span style={{ color: 'var(--text-muted)' }}>Hinweise verwendet:</span>
+            <span style={{ color: 'var(--text-muted)' }}>Fehlversuche:</span>
           </div>
-          <div style={{ textAlign: 'right' }}>{gameState.hintsUsed}</div>
+          <div style={{ textAlign: 'right' }}>{gameState.mistakes}</div>
           
           <div>
             <span style={{ color: 'var(--text-muted)' }}>Perfekte Rätsel:</span>

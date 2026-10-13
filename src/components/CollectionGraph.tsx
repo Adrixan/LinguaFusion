@@ -7,20 +7,17 @@ import {
   MiniMap,
   Node,
   Edge,
-  useNodesState,
-  useEdgesState,
   NodeProps,
   Handle,
   Position,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
-import { Element, ElementCategory } from '../data/elements';
+import { elements, BASIC_ELEMENT_IDS, Element, ElementCategory } from '../data/elements';
 
 interface CollectionGraphProps {
-  elements: Element[];
+  /** Elements the player has named; undiscovered or still-open ones stay hidden. */
   unlockedElements: string[];
-  discoveredElements: string[];
 }
 
 const CATEGORY_COLORS: Record<ElementCategory, string> = {
@@ -60,127 +57,87 @@ const nodeTypes = { element: ElementNode };
 const NODE_WIDTH = 110;
 const NODE_HEIGHT = 60;
 
-function buildLayout(elements: Element[], discoveredSet: Set<string>) {
+interface Link { source: string; target: string }
+
+/** Positions depend only on the (static) recipe graph, so they are computed once. */
+function buildLayout(all: Element[]) {
   const g = new dagre.graphlib.Graph();
   g.setDefaultEdgeLabel(() => ({}));
   g.setGraph({ rankdir: 'TB', nodesep: 40, ranksep: 70, marginx: 20, marginy: 20 });
 
-  const elementMap = new Map(elements.map((e) => [e.id, e]));
+  const known = new Set(all.map(e => e.id));
+  for (const el of all) g.setNode(el.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
 
-  for (const el of elements) {
-    g.setNode(el.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
-  }
-
-  const edgeList: { source: string; target: string; discovered: boolean }[] = [];
-
-  for (const el of elements) {
-    // Use only the first combination recipe to avoid duplicate edges
-    if (el.combinations.length > 0) {
-      const [parentA, parentB] = el.combinations[0];
-      if (elementMap.has(parentA)) {
-        const disc = discoveredSet.has(parentA) && discoveredSet.has(el.id);
-        g.setEdge(parentA, el.id);
-        edgeList.push({ source: parentA, target: el.id, discovered: disc });
-      }
-      if (parentB !== parentA && elementMap.has(parentB)) {
-        const disc = discoveredSet.has(parentB) && discoveredSet.has(el.id);
-        g.setEdge(parentB, el.id);
-        edgeList.push({ source: parentB, target: el.id, discovered: disc });
-      }
+  const links: Link[] = [];
+  for (const el of all) {
+    if (el.combinations.length === 0) continue;
+    const [a, b] = el.combinations[0];
+    for (const parent of new Set([a, b])) {
+      if (!known.has(parent)) continue;
+      g.setEdge(parent, el.id);
+      links.push({ source: parent, target: el.id });
     }
   }
-
   dagre.layout(g);
 
-  const nodes: Node[] = elements.map((el) => {
+  const positions = new Map(all.map(el => {
     const pos = g.node(el.id);
-    const discovered = discoveredSet.has(el.id);
-    return {
-      id: el.id,
-      type: 'element',
-      position: { x: pos.x - NODE_WIDTH / 2, y: pos.y - NODE_HEIGHT / 2 },
-      data: {
-        label: el.name,
-        symbol: el.symbol,
-        category: el.category,
-        discovered,
-        hint: el.hint,
-      },
-      draggable: false,
-    };
-  });
-
-  const edges: Edge[] = edgeList.map((e, i) => ({
-    id: `e-${e.source}-${e.target}-${i}`,
-    source: e.source,
-    target: e.target,
-    animated: false,
-    style: e.discovered
-      ? { stroke: '#F4A261', strokeWidth: 1.5 }
-      : { stroke: '#444', strokeWidth: 1, strokeDasharray: '5 3' },
+    return [el.id, { x: pos.x - NODE_WIDTH / 2, y: pos.y - NODE_HEIGHT / 2 }] as const;
   }));
-
-  return { nodes, edges };
+  return { positions, links };
 }
 
-function CollectionGraph({
-  elements,
-  unlockedElements: _unlockedElements,
-  discoveredElements,
-}: CollectionGraphProps) {
-  const discoveredSet = useMemo(() => new Set(discoveredElements), [discoveredElements]);
+const LAYOUT = buildLayout(elements);
 
-  const { initialNodes, initialEdges } = useMemo(() => {
-    const { nodes, edges } = buildLayout(elements, discoveredSet);
-    return { initialNodes: nodes, initialEdges: edges };
-  }, [elements, discoveredSet]);
+function CollectionGraph({ unlockedElements }: CollectionGraphProps) {
+  const discoveredSet = useMemo(() => new Set(unlockedElements), [unlockedElements]);
 
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
-
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; text: string } | null>(null);
-
-  const onNodeClick = useCallback(
-    (_: React.MouseEvent, node: Node) => {
-      const data = node.data as { discovered: boolean; hint: string; label: string };
-      if (data.discovered) {
-        setTooltip({
-          x: node.position.x,
-          y: node.position.y,
-          text: `${data.label}: ${data.hint}`,
-        });
-      } else {
-        setTooltip({
-          x: node.position.x,
-          y: node.position.y,
-          text: 'Noch nicht entdeckt',
-        });
-      }
-    },
-    [],
+  const nodes: Node[] = useMemo(
+    () =>
+      elements.map(el => ({
+        id: el.id,
+        type: 'element',
+        position: LAYOUT.positions.get(el.id) ?? { x: 0, y: 0 },
+        data: { label: el.name, symbol: el.symbol, category: el.category, discovered: discoveredSet.has(el.id), hint: el.hint },
+        draggable: false,
+      })),
+    [discoveredSet],
   );
+
+  // Edges are only drawn for discovered elements; showing them for hidden ones would give away the recipes.
+  const edges: Edge[] = useMemo(
+    () =>
+      LAYOUT.links
+        .filter(link => discoveredSet.has(link.target) && discoveredSet.has(link.source))
+        .map(link => ({
+          id: `e-${link.source}-${link.target}`,
+          source: link.source,
+          target: link.target,
+          style: { stroke: '#F4A261', strokeWidth: 1.5 },
+        })),
+    [discoveredSet],
+  );
+
+  const [tooltip, setTooltip] = useState<string | null>(null);
+
+  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
+    const data = node.data as { discovered: boolean; hint: string; label: string };
+    setTooltip(data.discovered ? `${data.label}: ${data.hint}` : 'Noch nicht entdeckt');
+  }, []);
 
   const onPaneClick = useCallback(() => setTooltip(null), []);
 
-  const basicNodes = useMemo(
-    () => initialNodes.filter((n) => ['feuer', 'wasser', 'erde', 'luft'].includes(n.id)),
-    [initialNodes],
-  );
+  const onInit = useCallback((instance: ReactFlowInstance) => {
+    instance.fitView({ nodes: BASIC_ELEMENT_IDS.map(id => ({ id })), maxZoom: 1.2, padding: 0.5 });
+  }, []);
 
-  const onInit = useCallback(
-    (instance: ReactFlowInstance) => {
-      instance.fitView({ nodes: basicNodes, maxZoom: 1.2, padding: 0.5 });
-    },
-    [basicNodes],
-  );
-
-  const progress = Math.round((discoveredElements.length / elements.length) * 100);
+  const progress = Math.round((unlockedElements.length / elements.length) * 100);
 
   return (
     <div className="collection-graph-wrapper">
       <div className="collection-graph-header">
         <div className="progress-text">
-          {discoveredElements.length} / {elements.length} Elemente entdeckt ({progress}%)
+          {unlockedElements.length} / {elements.length} Elemente entdeckt ({progress}%)
         </div>
         <div className="progress-bar-outer">
           <div className="progress-bar-inner" style={{ width: `${progress}%` }} />
@@ -191,9 +148,9 @@ function CollectionGraph({
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
           nodeTypes={nodeTypes}
+          nodesDraggable={false}
+          nodesConnectable={false}
           onNodeClick={onNodeClick}
           onPaneClick={onPaneClick}
           onInit={onInit}
@@ -204,7 +161,7 @@ function CollectionGraph({
           <Background color="#333" gap={20} />
           <Controls showInteractive={false} />
           <MiniMap
-            nodeColor={(n) => {
+            nodeColor={n => {
               const d = n.data as { discovered: boolean; category: ElementCategory };
               return d.discovered ? (CATEGORY_COLORS[d.category] ?? '#666') : '#444';
             }}
@@ -213,11 +170,13 @@ function CollectionGraph({
           />
         </ReactFlow>
 
-        {tooltip && (
-          <div className="graph-tooltip" onClick={() => setTooltip(null)}>
-            {tooltip.text}
-          </div>
-        )}
+        <div role="status">
+          {tooltip && (
+            <div className="graph-tooltip" onClick={() => setTooltip(null)}>
+              {tooltip}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
