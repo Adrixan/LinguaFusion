@@ -1,5 +1,13 @@
 import { expect, Page, test } from '@playwright/test';
 
+// Badges depend on the time of day (Nachteule 0-5 h, Frühaufsteher 5-6 h). A fixed midday clock keeps the
+// tests from being interrupted by a badge dialog when CI happens to run at night or early in the morning.
+const TEST_NOW = new Date(2026, 0, 15, 12, 0, 0);
+
+test.beforeEach(async ({ page }) => {
+  await page.clock.setFixedTime(TEST_NOW);
+});
+
 const SAVE_KEY = 'linguafusion-save';
 const LEGACY_SAVE_KEY = 'alchemie-fusion-save';
 const BASICS = ['feuer', 'wasser', 'erde', 'luft'];
