@@ -1,6 +1,6 @@
 # Session handoff: LinguaFusion production-readiness
 
-Delivery branch: `feat/vocabulary-spaced-review`, based on `main`. Push and required merge back to `main` are the final remaining operational steps.
+Delivered from `feat/vocabulary-spaced-review`, merged and pushed to `main` as `8a8508b`.
 
 ## Done
 - Review of the whole app; bugs reproduced in a headless browser, then fixed.
