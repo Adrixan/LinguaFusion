@@ -7,12 +7,12 @@ interface SettingsModalProps {
   onReset: () => void;
   showHints: boolean;
   onToggleHints: () => void;
+  onReplayTutorial: () => void;
 }
 
-function SettingsModal({ onClose, onExport, onImport, onReset, showHints, onToggleHints }: SettingsModalProps) {
+function SettingsModal({ onClose, onExport, onImport, onReset, showHints, onToggleHints, onReplayTutorial }: SettingsModalProps) {
   const handleReset = () => {
     onReset();
-    onClose();
   };
 
   return (
@@ -52,6 +52,11 @@ function SettingsModal({ onClose, onExport, onImport, onReset, showHints, onTogg
           <button className="settings-btn" onClick={onImport}>
             📂 Importieren
           </button>
+        </div>
+
+        <div className="settings-section">
+          <h3>📚 Tutorial</h3>
+          <button className="settings-btn" onClick={() => { onClose(); onReplayTutorial(); }}>Tutorial erneut ansehen</button>
         </div>
 
         <div className="settings-section">

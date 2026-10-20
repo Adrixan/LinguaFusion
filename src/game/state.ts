@@ -1,7 +1,7 @@
 import { elements, getCombinableElements, getElementById, BASIC_ELEMENT_IDS, Element, ElementCategory } from '../data/elements';
 import { badges } from '../data/badges';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export interface GameState {
   version: typeof SAVE_VERSION;
@@ -16,6 +16,9 @@ export interface GameState {
   perfectWords: number;
   /** Wrong guesses in total. */
   mistakes: number;
+  /** Lifetime wrong guesses per element, including skipped puzzles. */
+  puzzleAttempts: Record<string, number>;
+  tutorialDismissed: boolean;
   /** Consecutive new discoveries without a failed or redundant combination. */
   streak: number;
   maxStreak: number;
@@ -38,6 +41,8 @@ export const createInitialState = (now = Date.now()): GameState => ({
   wordsSolved: 0,
   perfectWords: 0,
   mistakes: 0,
+  puzzleAttempts: {},
+  tutorialDismissed: false,
   streak: 0,
   maxStreak: 0,
   tutorialCompleted: false,
@@ -72,12 +77,16 @@ export function resolveCombination(state: GameState, a: string, b: string): Comb
 export type GameAction =
   | { type: 'combine'; a: string; b: string; now: number }
   | { type: 'solve'; elementId: string; wrongAttempts: number; now: number }
-  | { type: 'skip'; elementId: string }
+  | { type: 'wrongGuess'; elementId: string; now: number }
+  | { type: 'dismissTutorial'; now: number }
+  | { type: 'replayTutorial'; now: number }
+  | { type: 'skip'; elementId: string; now: number }
   | { type: 'completeTutorial'; now: number }
   | { type: 'toggleHints' }
   | { type: 'markDataTransferred'; now: number }
   | { type: 'tick'; elapsedMs: number; now: number }
   | { type: 'replace'; state: GameState; now: number }
+  | { type: 'sync'; state: GameState }
   | { type: 'reset'; now: number };
 
 const categoryOf = new Map<string, ElementCategory>(elements.map(e => [e.id, e.category]));
@@ -144,10 +153,22 @@ function applyAction(state: GameState, action: GameAction): GameState {
         ...state,
         unlockedElements: [...state.unlockedElements, action.elementId],
         wordsSolved: state.wordsSolved + 1,
-        perfectWords: action.wrongAttempts === 0 ? state.perfectWords + 1 : state.perfectWords,
-        mistakes: state.mistakes + action.wrongAttempts,
+        perfectWords: (state.puzzleAttempts[action.elementId] ?? action.wrongAttempts) === 0 ? state.perfectWords + 1 : state.perfectWords,
+        mistakes: state.mistakes + (state.puzzleAttempts[action.elementId] === undefined ? action.wrongAttempts : 0),
+        puzzleAttempts: { ...state.puzzleAttempts, [action.elementId]: state.puzzleAttempts[action.elementId] ?? action.wrongAttempts },
       };
     }
+    case 'wrongGuess':
+      if (getPendingElement(state)?.id !== action.elementId) return state;
+      return {
+        ...state,
+        mistakes: state.mistakes + 1,
+        puzzleAttempts: { ...state.puzzleAttempts, [action.elementId]: (state.puzzleAttempts[action.elementId] ?? 0) + 1 },
+      };
+    case 'dismissTutorial':
+      return { ...state, tutorialDismissed: true };
+    case 'replayTutorial':
+      return { ...state, tutorialDismissed: false };
     case 'skip': {
       // The element goes back to "undiscovered" so the player can find it again later.
       if (getPendingElement(state)?.id !== action.elementId) return state;
@@ -158,7 +179,7 @@ function applyAction(state: GameState, action: GameAction): GameState {
       };
     }
     case 'completeTutorial':
-      return state.tutorialCompleted ? state : { ...state, tutorialCompleted: true };
+      return { ...state, tutorialCompleted: true, tutorialDismissed: true };
     case 'toggleHints':
       return { ...state, showHints: !state.showHints };
     case 'markDataTransferred':
@@ -166,11 +187,13 @@ function applyAction(state: GameState, action: GameAction): GameState {
     case 'tick':
       return {
         ...state,
-        totalPlayTime: state.totalPlayTime + action.elapsedMs,
+        totalPlayTime: state.totalPlayTime + Math.max(0, Math.min(action.elapsedMs, 60_000)),
         lastPlayed: new Date(action.now).toISOString(),
       };
     case 'replace':
       return { ...action.state, dataTransferred: true };
+    case 'sync':
+      return action.state;
     case 'reset':
       return createInitialState(action.now);
   }
@@ -180,5 +203,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
   const next = applyAction(state, action);
   // Badges are evaluated here, after every action that carries a clock reading, and nowhere else.
   if (action.type === 'reset' || !('now' in action)) return next;
-  return withBadges(next, action.now);
+  const timed = next !== state && action.type !== 'tick'
+    ? { ...next, lastPlayed: new Date(action.now).toISOString() }
+    : next;
+  return withBadges(timed, action.now);
 }

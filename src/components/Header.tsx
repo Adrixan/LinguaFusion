@@ -23,6 +23,7 @@ function Header({ progress, onSettingsClick, onExportClick, onImportClick }: Hea
           className="icon-btn" 
           onClick={onExportClick}
           title="Exportieren"
+          aria-label="Spielstand exportieren"
         >
           💾
         </button>
@@ -30,6 +31,7 @@ function Header({ progress, onSettingsClick, onExportClick, onImportClick }: Hea
           className="icon-btn" 
           onClick={onImportClick}
           title="Importieren"
+          aria-label="Spielstand importieren"
         >
           📂
         </button>
@@ -37,6 +39,7 @@ function Header({ progress, onSettingsClick, onExportClick, onImportClick }: Hea
           className="icon-btn" 
           onClick={onSettingsClick}
           title="Einstellungen"
+          aria-label="Einstellungen öffnen"
         >
           ⚙️
         </button>

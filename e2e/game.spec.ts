@@ -66,6 +66,9 @@ test('an element can be combined with itself (Feuer + Feuer = Energie)', async (
 
   await solve(page, 'Wasser');
   await expect(page.getByRole('alert')).toContainText('falsch');
+  await page.getByRole('tab', { name: /Statistiken/ }).click();
+  await page.getByRole('tab', { name: /Kombination/ }).click();
+  await expect(page.getByText('Fehlversuche: 1')).toBeVisible();
   await solve(page, 'ENERGIE');
 
   const dialog = page.getByRole('dialog', { name: 'Richtig' });
@@ -78,6 +81,14 @@ test('an element can be combined with itself (Feuer + Feuer = Energie)', async (
   expect(save.wordsSolved).toBe(1);
   expect(save.mistakes).toBe(1);
   expect(save.perfectWords).toBe(0); // solved on the second try, so not perfect
+});
+
+test('element search filters the combination grid', async ({ page }) => {
+  await seedSave(page, { ...baseSave, unlockedElements: [...BASICS, 'dampf', 'lava'], discoveredElements: [...BASICS, 'dampf', 'lava'] });
+  await page.goto('/');
+  await page.getByLabel('Elemente suchen').fill('lav');
+  await expect(page.locator('.element-grid .element-card')).toHaveCount(1);
+  await expect(card(page, 'Lava')).toBeVisible();
 });
 
 test('umlauts can be typed as ue/oe/ae/ss', async ({ page }) => {

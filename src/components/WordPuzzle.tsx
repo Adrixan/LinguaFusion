@@ -1,4 +1,4 @@
-import { FormEvent, useId, useState } from 'react';
+import { FormEvent, useId, useRef, useState } from 'react';
 import { Element } from '../data/elements';
 import { isCorrectGuess, normalizeWord } from '../game/words';
 
@@ -7,11 +7,13 @@ interface WordPuzzleProps {
   /** Called with the number of wrong guesses made before the correct one. */
   onSolve: (wrongAttempts: number) => void;
   onSkip: () => void;
+  wrongAttempts: number;
+  onWrongGuess: () => void;
 }
 
-function WordPuzzle({ element, onSolve, onSkip }: WordPuzzleProps) {
+function WordPuzzle({ element, onSolve, onSkip, wrongAttempts, onWrongGuess }: WordPuzzleProps) {
   const [guess, setGuess] = useState('');
-  const [wrongAttempts, setWrongAttempts] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
 
   const letterCount = [...element.name].length;
@@ -22,8 +24,9 @@ function WordPuzzle({ element, onSolve, onSkip }: WordPuzzleProps) {
     if (isCorrectGuess(guess, element.name)) {
       onSolve(wrongAttempts);
     } else {
-      setWrongAttempts(count => count + 1);
+      onWrongGuess();
       setGuess('');
+      inputRef.current?.focus();
     }
   };
 
@@ -46,7 +49,7 @@ function WordPuzzle({ element, onSolve, onSkip }: WordPuzzleProps) {
           {letterCount} Buchstaben
         </p>
 
-        <div className="hint-text">
+        <div className="hint-text" id={`${inputId}-hint`}>
           <p>💡 Hinweis: {element.hint}</p>
         </div>
 
@@ -54,6 +57,8 @@ function WordPuzzle({ element, onSolve, onSkip }: WordPuzzleProps) {
           <label htmlFor={inputId} className="sr-only">Name des Elements</label>
           <input
             id={inputId}
+            ref={inputRef}
+            aria-describedby={`${inputId}-hint${wrongAttempts > 0 ? ` ${inputId}-error` : ''}`}
             type="text"
             value={guess}
             onChange={event => setGuess(event.target.value)}
@@ -71,7 +76,7 @@ function WordPuzzle({ element, onSolve, onSkip }: WordPuzzleProps) {
         </form>
 
         {wrongAttempts > 0 && (
-          <p role="alert" style={{ textAlign: 'center', color: 'var(--error)', marginBottom: '1rem' }}>
+          <p id={`${inputId}-error`} role="alert" style={{ textAlign: 'center', color: 'var(--error)', marginBottom: '1rem' }}>
             Leider falsch! Versuche es nochmal.
           </p>
         )}

@@ -71,12 +71,30 @@ describe('solving', () => {
     expect(solved.perfectWords).toBe(0);
     expect(solved.wordsSolved).toBe(1);
   });
+
+  it('persists wrong guesses across a skipped puzzle and never grants a retry as perfect', () => {
+    let state = combine(createInitialState(NOON), 'feuer', 'wasser');
+    state = gameReducer(state, { type: 'wrongGuess', elementId: 'dampf', now: NOON });
+    expect(state.mistakes).toBe(1);
+    state = gameReducer(state, { type: 'skip', elementId: 'dampf', now: NOON });
+    state = combine(state, 'feuer', 'wasser');
+    state = solve(state, 'dampf');
+    expect(state.mistakes).toBe(1);
+    expect(state.perfectWords).toBe(0);
+  });
+
+  it('marks tutorial dismissal separately from completion', () => {
+    const dismissed = gameReducer(createInitialState(NOON), { type: 'dismissTutorial', now: NOON });
+    expect(dismissed.tutorialDismissed).toBe(true);
+    expect(dismissed.tutorialCompleted).toBe(false);
+    expect(dismissed.badges).not.toContain('tutorial');
+  });
 });
 
 describe('skipping', () => {
   it('returns the element to undiscovered without unlocking it', () => {
     const open = combine(createInitialState(NOON), 'feuer', 'wasser');
-    const skipped = gameReducer(open, { type: 'skip', elementId: 'dampf' });
+    const skipped = gameReducer(open, { type: 'skip', elementId: 'dampf', now: NOON });
     expect(getPendingElement(skipped)).toBeNull();
     expect(skipped.discoveredElements).not.toContain('dampf');
     expect(skipped.unlockedElements).not.toContain('dampf');
@@ -87,7 +105,7 @@ describe('skipping', () => {
 
   it('does nothing when no puzzle is open', () => {
     const state = createInitialState(NOON);
-    expect(gameReducer(state, { type: 'skip', elementId: 'dampf' })).toBe(state);
+    expect(gameReducer(state, { type: 'skip', elementId: 'dampf', now: NOON })).toBe(state);
   });
 });
 
@@ -134,6 +152,11 @@ describe('housekeeping actions', () => {
     const state = gameReducer(createInitialState(NOON), { type: 'tick', elapsedMs: 15_000, now: NOON });
     expect(state.totalPlayTime).toBe(15_000);
     expect(state.lastPlayed).toBe(new Date(NOON).toISOString());
+  });
+
+  it('clamps implausible time intervals', () => {
+    const state = gameReducer(createInitialState(NOON), { type: 'tick', elapsedMs: 900_000, now: NOON });
+    expect(state.totalPlayTime).toBe(60_000);
   });
 
   it('resets to a fresh game', () => {

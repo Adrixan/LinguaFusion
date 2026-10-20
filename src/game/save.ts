@@ -52,6 +52,12 @@ export function sanitizeSave(raw: unknown, now = Date.now()): GameState | null {
     wordsSolved: count(raw.wordsSolved),
     perfectWords: count(raw.perfectWords),
     mistakes: count(raw.mistakes),
+    puzzleAttempts: Object.fromEntries(
+      isRecord(raw.puzzleAttempts)
+        ? Object.entries(raw.puzzleAttempts).filter(([id]) => KNOWN_ELEMENT_IDS.has(id)).map(([id, attempts]) => [id, count(attempts)])
+        : [],
+    ),
+    tutorialDismissed: raw.tutorialDismissed === true || raw.tutorialCompleted === true,
     streak,
     maxStreak: Math.max(count(raw.maxStreak), streak),
     tutorialCompleted: raw.tutorialCompleted === true,
@@ -77,30 +83,62 @@ export function parseSave(text: string, now = Date.now()): GameState | null {
   }
 }
 
-export function loadGame(storage: KeyValueStorage | undefined = safeLocalStorage(), now = Date.now()): { state: GameState; status: LoadStatus } {
-  if (!storage) return { state: createInitialState(now), status: 'fresh' };
+export function loadGame(storage: KeyValueStorage | undefined = safeLocalStorage(), now = Date.now()): { state: GameState; status: LoadStatus; revision: number } {
+  if (!storage) return { state: createInitialState(now), status: 'fresh', revision: 0 };
   try {
     const current = storage.getItem(STORAGE_KEY);
     const raw = current ?? storage.getItem(LEGACY_STORAGE_KEY);
-    if (raw === null) return { state: createInitialState(now), status: 'fresh' };
+    if (raw === null) return { state: createInitialState(now), status: 'fresh', revision: 0 };
 
     const state = parseSave(raw, now);
-    if (state) return { state, status: current !== null ? 'loaded' : 'migrated' };
+    if (state) {
+      let revision = 0;
+      try {
+        const parsed: unknown = JSON.parse(raw);
+        revision = isRecord(parsed) ? count(parsed.revision) : 0;
+      } catch { /* parseSave already rejected malformed data */ }
+      return { state, status: current !== null ? 'loaded' : 'migrated', revision };
+    }
 
     // Keep the unreadable data so it can be inspected or repaired by hand, then start over.
     storage.setItem(CORRUPT_BACKUP_KEY, raw);
   } catch (e) {
     console.error('Failed to load save:', e);
   }
-  return { state: createInitialState(now), status: 'recovered' };
+  return { state: createInitialState(now), status: 'recovered', revision: 0 };
 }
 
-export function saveGame(state: GameState, storage: KeyValueStorage | undefined = safeLocalStorage()): void {
-  if (!storage) return;
+export function saveGame(state: GameState, storage: KeyValueStorage | undefined = safeLocalStorage()): boolean {
+  if (!storage) return false;
   try {
     storage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return true;
   } catch (e) {
     console.error('Failed to save:', e);
+    return false;
+  }
+}
+
+/** Save with a revision token; callers use this to reject stale writes from other tabs. */
+export type SaveResult = 'saved' | 'conflict' | 'unavailable';
+
+export function saveGameIfCurrent(state: GameState, expectedRevision: number, storage: KeyValueStorage | undefined = safeLocalStorage()): SaveResult {
+  if (!storage) return 'unavailable';
+  try {
+    const current = storage.getItem(STORAGE_KEY);
+    if (current !== null) {
+      let parsed: unknown;
+      try { parsed = JSON.parse(current); } catch { parsed = null; }
+      const revision = isRecord(parsed) ? count(parsed.revision) : 0;
+      if (revision !== expectedRevision) return 'conflict';
+    } else if (expectedRevision > 0) {
+      return 'conflict';
+    }
+    storage.setItem(STORAGE_KEY, JSON.stringify({ ...state, revision: expectedRevision + 1 }));
+    return 'saved';
+  } catch (e) {
+    console.error('Failed to write revisioned save:', e);
+    return 'unavailable';
   }
 }
 

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { elements, Element, getElementById, getCombinableElements } from '../data/elements';
 import { Notice } from '../hooks/useGame';
 
@@ -38,6 +38,9 @@ function CombinationArea({
   onRemoveSelected,
   onCombine,
 }: CombinationAreaProps) {
+  const categoryLabels: Record<string, string> = { nature: 'Natur', animal: 'Tiere', plant: 'Pflanzen', food: 'Nahrung', object: 'Gegenstände', concept: 'Konzepte' };
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState('all');
   const unlocked = useMemo(() => {
     const ids = new Set(unlockedElements);
     return elements.filter(element => ids.has(element.id));
@@ -105,8 +108,20 @@ function CombinationArea({
       )}
 
       <h3 style={{ marginTop: '2rem', marginBottom: '1rem' }}>Wähle Elemente:</h3>
+      <div className="element-filters">
+        <label htmlFor="element-search">Elemente suchen</label>
+        <input id="element-search" type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Name eingeben…" />
+        <label htmlFor="element-category">Kategorie</label>
+        <select id="element-category" value={category} onChange={event => setCategory(event.target.value)}>
+          <option value="all">Alle Kategorien</option>
+          {[...new Set(elements.map(element => element.category))].filter(item => item !== 'basic').map(item => (
+            <option key={item} value={item}>{categoryLabels[item] ?? item}</option>
+          ))}
+        </select>
+        <span aria-live="polite">{unlocked.filter(element => element.name.toLocaleLowerCase('de-AT').includes(query.toLocaleLowerCase('de-AT')) && (category === 'all' || element.category === category)).length} Elemente</span>
+      </div>
       <div className="element-grid">
-        {unlocked.map(element => {
+        {unlocked.filter(element => element.name.toLocaleLowerCase('de-AT').includes(query.toLocaleLowerCase('de-AT')) && (category === 'all' || element.category === category)).map(element => {
           const isSelected = selectedElements.includes(element.id);
           const showGeneralHint = !hasSingleSelection && generallyCombinable.has(element.id);
           const showTargetHint = hasSingleSelection && combinableWithSelected.has(element.id);
@@ -121,8 +136,9 @@ function CombinationArea({
             <button
               key={element.id}
               type="button"
-              className={classes}
+              className={`${classes} combination-element`}
               aria-pressed={isSelected}
+              aria-label={`${element.name}${showGeneralHint || showTargetHint ? ', neue Kombination möglich' : ''}`}
               onClick={() => onSelectElement(element.id)}
             >
               <div className="element-symbol" aria-hidden="true">{element.symbol}</div>

@@ -48,7 +48,7 @@ function App() {
     return () => clearTimeout(id);
   }, [toast]);
 
-  const progress = Math.round((gameState.unlockedElements.length / elements.length) * 100);
+  const progress = Math.floor((gameState.unlockedElements.length / elements.length) * 100);
 
   const handleExport = () => {
     const blob = new Blob([game.exportSave()], { type: 'application/json' });
@@ -72,13 +72,18 @@ function App() {
       return;
     }
     if (!confirm('Der aktuelle Spielstand wird durch die Datei ersetzt. Fortfahren?')) return;
-    const imported = game.importSave(await file.text());
-    setToast(imported ? 'Spielstand erfolgreich importiert!' : 'Die Datei ist kein gültiger Spielstand.');
+    try {
+      const imported = game.importSave(await file.text());
+      setToast(imported ? 'Spielstand erfolgreich importiert!' : 'Die Datei ist kein gültiger Spielstand.');
+    } catch {
+      setToast('Die Datei konnte nicht gelesen werden. Bitte erneut versuchen.');
+    }
   };
 
   const handleReset = () => {
     if (confirm('Möchtest du wirklich alles zurücksetzen? Dein gesamter Fortschritt geht verloren!')) {
       game.resetGame();
+      setShowSettings(false);
     }
   };
 
@@ -99,17 +104,42 @@ function App() {
         aria-hidden="true"
       />
 
-      {!gameState.tutorialCompleted && <TutorialOverlay onComplete={game.completeTutorial} />}
+      {!gameState.tutorialDismissed && (
+        <TutorialOverlay onComplete={game.completeTutorial} onDismiss={game.dismissTutorial} />
+      )}
+
+      {game.persistenceError && (
+        <div className="persistence-warning" role="alert">
+          Spielstand konnte nicht gespeichert werden. Exportiere deinen Fortschritt, bevor du die Seite verlässt.
+          <button type="button" onClick={handleExport}>Jetzt exportieren</button>
+        </div>
+      )}
+      {game.saveConflict && (
+        <div className="persistence-warning" role="alert">
+          Ein anderer Tab hat neueren Fortschritt gespeichert. Dessen Spielstand wurde übernommen. Spiele bitte nur in einem Tab gleichzeitig.
+        </div>
+      )}
 
       <main className="main-content">
-        <div className="tabs" role="tablist">
+        <div className="tabs" role="tablist" aria-label="Spielbereiche" onKeyDown={event => {
+          const tabIds: Tab[] = ['combine', 'collection', 'badges', 'stats'];
+          const current = tabIds.indexOf(activeTab);
+          const next = event.key === 'ArrowRight' ? (current + 1) % tabIds.length
+            : event.key === 'ArrowLeft' ? (current - 1 + tabIds.length) % tabIds.length : -1;
+          if (next >= 0) {
+            event.preventDefault();
+            setActiveTab(tabIds[next]);
+            document.getElementById(`tab-${tabIds[next]}`)?.focus();
+          }
+        }}>
           {TABS.map(tab => (
             <button
               key={tab.id}
               id={`tab-${tab.id}`}
               role="tab"
               aria-selected={activeTab === tab.id}
-              aria-controls={`panel-${tab.id}`}
+              tabIndex={activeTab === tab.id ? 0 : -1}
+              aria-controls="game-panel"
               className={`tab ${activeTab === tab.id ? 'active' : ''}`}
               onClick={() => setActiveTab(tab.id)}
             >
@@ -118,7 +148,7 @@ function App() {
           ))}
         </div>
 
-        <div role="tabpanel" id={`panel-${activeTab}`} aria-labelledby={`tab-${activeTab}`}>
+        <div role="tabpanel" id="game-panel" aria-labelledby={`tab-${activeTab}`} tabIndex={0}>
           {activeTab === 'combine' &&
             (pendingElement ? (
               <WordPuzzle
@@ -126,6 +156,8 @@ function App() {
                 element={pendingElement}
                 onSolve={game.solveWord}
                 onSkip={game.skipWord}
+                wrongAttempts={gameState.puzzleAttempts[pendingElement.id] ?? 0}
+                onWrongGuess={game.wrongGuess}
               />
             ) : (
               <CombinationArea
@@ -146,7 +178,7 @@ function App() {
             </Suspense>
           )}
 
-          {activeTab === 'badges' && <BadgeDisplay badges={badges} earnedBadges={gameState.badges} />}
+          {activeTab === 'badges' && <BadgeDisplay badges={badges} earnedBadges={gameState.badges} gameState={gameState} />}
 
           {activeTab === 'stats' && (
             <StatsDisplay gameState={gameState} totalElements={elements.length} onReset={handleReset} />
@@ -154,7 +186,7 @@ function App() {
         </div>
       </main>
 
-      {showSettings && (
+      {showSettings && gameState.tutorialDismissed && !lastSolved && (
         <SettingsModal
           onClose={() => setShowSettings(false)}
           onExport={handleExport}
@@ -162,10 +194,11 @@ function App() {
           onReset={handleReset}
           showHints={gameState.showHints}
           onToggleHints={game.toggleHints}
+          onReplayTutorial={game.replayTutorial}
         />
       )}
 
-      {lastSolved && (
+      {lastSolved && gameState.tutorialDismissed && (
         <Modal ariaLabel="Richtig" onClose={game.dismissSolved} className="celebration-content">
           <div className="celebration-icon" aria-hidden="true">{lastSolved.symbol}</div>
           <h2>🎉 Richtig!</h2>
@@ -175,7 +208,9 @@ function App() {
         </Modal>
       )}
 
-      {activeBadge && !lastSolved && !pendingElement && <BadgeModal badge={activeBadge} onClose={game.dismissBadge} />}
+      {activeBadge && !lastSolved && !pendingElement && !showSettings && gameState.tutorialDismissed && (
+        <BadgeModal badge={activeBadge} onClose={game.dismissBadge} />
+      )}
 
       {toast && (
         <div className="toast" role="status">
