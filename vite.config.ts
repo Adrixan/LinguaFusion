@@ -35,6 +35,13 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(version),
   },
+  preview: {
+    headers: {
+      'Content-Security-Policy': `${CSP}; frame-ancestors 'none'`,
+      'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'no-referrer',
+    },
+  },
   plugins: [
     react(),
     contentSecurityPolicy(),
@@ -42,6 +49,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png', 'icons/icon.svg'],
       manifest: {
+        id: '/',
         name: 'LinguaFusion',
         short_name: 'LinguaFusion',
         description: 'Lerne Deutsch durch das Kombinieren von Elementen!',
@@ -54,7 +62,7 @@ export default defineConfig({
         icons: [
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: '/icons/icon-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {

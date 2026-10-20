@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { elements, getCombinableElements, BASIC_ELEMENT_IDS } from './elements';
 import { badges, BADGE_IDS } from './badges';
+import { vocabularyNotes } from './vocabulary';
 
 const ids = new Set(elements.map(e => e.id));
 
@@ -92,5 +93,15 @@ describe('badge data', () => {
       }
     }
     expect(badges.find(b => b.id === 'all-discoveries')?.requirement).toBe(nonBasic);
+  });
+});
+
+describe('vocabulary notes', () => {
+  it('contains valid article and example metadata for every curated note', () => {
+    for (const [id, note] of Object.entries(vocabularyNotes)) {
+      expect(ids.has(id), id).toBe(true);
+      expect(['der', 'die', 'das']).toContain(note.article);
+      expect(note.example.trim()).not.toBe('');
+    }
   });
 });

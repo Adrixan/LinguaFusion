@@ -38,6 +38,7 @@ export interface UseGame {
   dismissTutorial: () => void;
   replayTutorial: () => void;
   toggleHints: () => void;
+  reviewVocabulary: (elementId: string, rating: 'again' | 'good' | 'easy') => void;
   exportSave: () => string;
   importSave: (text: string) => boolean;
   resetGame: () => void;
@@ -252,6 +253,9 @@ export function useGame(): UseGame {
     dispatchLocal({ type: 'replayTutorial', now: Date.now() });
   }, [dispatchLocal]);
   const toggleHints = useCallback(() => dispatchLocal({ type: 'toggleHints' }), [dispatchLocal]);
+  const reviewVocabulary = useCallback((elementId: string, rating: 'again' | 'good' | 'easy') => {
+    dispatchLocal({ type: 'review', elementId, rating, now: Date.now() });
+  }, [dispatchLocal]);
 
   const exportSave = useCallback((): string => {
     const action: GameAction = { type: 'markDataTransferred', now: Date.now() };
@@ -299,6 +303,7 @@ export function useGame(): UseGame {
     dismissTutorial,
     replayTutorial,
     toggleHints,
+    reviewVocabulary,
     exportSave,
     importSave,
     resetGame,

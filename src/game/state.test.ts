@@ -159,6 +159,31 @@ describe('housekeeping actions', () => {
     expect(state.totalPlayTime).toBe(60_000);
   });
 
+  it('schedules spaced vocabulary review according to the selected rating', () => {
+    const initial = createInitialState(NOON);
+    const unlocked = { ...initial, unlockedElements: [...initial.unlockedElements, 'dampf'] };
+    const good = gameReducer(unlocked, { type: 'review', elementId: 'dampf', rating: 'good', now: NOON });
+    expect(good.reviews.dampf.intervalDays).toBe(1);
+    expect(good.reviews.dampf.dueAt).toBe(new Date(NOON + 86_400_000).toISOString());
+    const again = gameReducer(good, { type: 'review', elementId: 'dampf', rating: 'again', now: NOON });
+    expect(again.reviews.dampf.intervalDays).toBe(0);
+    expect(again.reviews.dampf.repetitions).toBe(0);
+    expect(again.reviews.dampf.dueAt).toBe(new Date(NOON + 600_000).toISOString());
+  });
+
+  it('caps review intervals, preserves discovery scores, and rejects locked vocabulary', () => {
+    const initial = createInitialState(NOON);
+    expect(gameReducer(initial, { type: 'review', elementId: 'baum', rating: 'easy', now: NOON })).toBe(initial);
+    let state = initial;
+    for (let index = 0; index < 12; index += 1) {
+      state = gameReducer(state, { type: 'review', elementId: 'feuer', rating: 'easy', now: NOON });
+    }
+    expect(state.reviews.feuer.intervalDays).toBe(365);
+    expect(state.wordsSolved).toBe(0);
+    expect(state.perfectWords).toBe(0);
+    expect(state.discoveredElements).toEqual(initial.discoveredElements);
+  });
+
   it('resets to a fresh game', () => {
     const played = solve(combine(createInitialState(NOON), 'feuer', 'wasser'), 'dampf');
     expect(gameReducer(played, { type: 'reset', now: NOON })).toEqual(createInitialState(NOON));

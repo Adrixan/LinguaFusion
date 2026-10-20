@@ -1,7 +1,7 @@
 import { elements, getCombinableElements, getElementById, BASIC_ELEMENT_IDS, Element, ElementCategory } from '../data/elements';
 import { badges } from '../data/badges';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export interface GameState {
   version: typeof SAVE_VERSION;
@@ -31,6 +31,28 @@ export interface GameState {
   /** Active play time in milliseconds. */
   totalPlayTime: number;
   showHints: boolean;
+  /** Spaced-review progress for unlocked vocabulary. */
+  reviews: Record<string, VocabularyReview>;
+}
+
+export interface VocabularyReview {
+  dueAt: string;
+  intervalDays: number;
+  repetitions: number;
+  lastReviewed: string | null;
+}
+
+/** Shared schedule calculation keeps button labels aligned with persisted due dates. */
+export function getReviewSchedule(previous: VocabularyReview | undefined, rating: 'again' | 'good' | 'easy', now: number): VocabularyReview {
+  const intervalDays = rating === 'again' ? 0 : Math.min(365, rating === 'easy'
+    ? Math.max(4, (previous?.intervalDays ?? 0) * 3)
+    : Math.max(1, (previous?.intervalDays ?? 0) * 2));
+  return {
+    dueAt: new Date(now + (rating === 'again' ? 600_000 : intervalDays * 86_400_000)).toISOString(),
+    intervalDays,
+    repetitions: rating === 'again' ? 0 : (previous?.repetitions ?? 0) + 1,
+    lastReviewed: new Date(now).toISOString(),
+  };
 }
 
 export const createInitialState = (now = Date.now()): GameState => ({
@@ -51,6 +73,7 @@ export const createInitialState = (now = Date.now()): GameState => ({
   lastPlayed: new Date(now).toISOString(),
   totalPlayTime: 0,
   showHints: true,
+  reviews: {},
 });
 
 export type CombineOutcome =
@@ -87,6 +110,7 @@ export type GameAction =
   | { type: 'tick'; elapsedMs: number; now: number }
   | { type: 'replace'; state: GameState; now: number }
   | { type: 'sync'; state: GameState }
+  | { type: 'review'; elementId: string; rating: 'again' | 'good' | 'easy'; now: number }
   | { type: 'reset'; now: number };
 
 const categoryOf = new Map<string, ElementCategory>(elements.map(e => [e.id, e.category]));
@@ -156,6 +180,10 @@ function applyAction(state: GameState, action: GameAction): GameState {
         perfectWords: (state.puzzleAttempts[action.elementId] ?? action.wrongAttempts) === 0 ? state.perfectWords + 1 : state.perfectWords,
         mistakes: state.mistakes + (state.puzzleAttempts[action.elementId] === undefined ? action.wrongAttempts : 0),
         puzzleAttempts: { ...state.puzzleAttempts, [action.elementId]: state.puzzleAttempts[action.elementId] ?? action.wrongAttempts },
+        reviews: state.reviews[action.elementId] ? state.reviews : {
+          ...state.reviews,
+          [action.elementId]: { dueAt: new Date(action.now).toISOString(), intervalDays: 0, repetitions: 0, lastReviewed: null },
+        },
       };
     }
     case 'wrongGuess':
@@ -182,6 +210,10 @@ function applyAction(state: GameState, action: GameAction): GameState {
       return { ...state, tutorialCompleted: true, tutorialDismissed: true };
     case 'toggleHints':
       return { ...state, showHints: !state.showHints };
+    case 'review': {
+      if (!state.unlockedElements.includes(action.elementId)) return state;
+      return { ...state, reviews: { ...state.reviews, [action.elementId]: getReviewSchedule(state.reviews[action.elementId], action.rating, action.now) } };
+    }
     case 'markDataTransferred':
       return state.dataTransferred ? state : { ...state, dataTransferred: true };
     case 'tick':

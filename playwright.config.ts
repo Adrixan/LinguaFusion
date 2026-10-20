@@ -10,7 +10,7 @@ export default defineConfig({
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: 'http://localhost:4173',
-    serviceWorkers: 'block',
+    serviceWorkers: 'allow',
     trace: 'retain-on-failure',
     launchOptions: {
       executablePath: process.env.PW_CHROMIUM_PATH || undefined,
