@@ -86,15 +86,26 @@
 - Export als JSON
 - Import aus JSON (max. 1 MB, mit Bestätigung)
 
+### Wortschatz-Wiederholung
+- Fällige, freigeschaltete Wörter werden als Abrufübung ohne sichtbare Lösung angezeigt.
+- Nach dem Aufdecken helfen für kuratierte Wörter Artikel, Mehrzahl und Beispielsätze beim Einprägen.
+- Wörter ohne kuratierte Zusatzinformationen bleiben mit Definition und eigenem Beispielsatz wiederholbar.
+- Bewertungen „Nochmal“, „Gewusst“ und „Leicht“ planen die nächste Wiederholung; „Nochmal“ setzt einen kurzen 10-Minuten-Abstand.
+- Wiederholungen verändern keine Entdeckungs- oder Rätselstatistik.
+- Review-Zeitpunkte werden im Spielstand gespeichert und beim Import validiert.
+
 ## Akzeptanzkriterien
-- [ ] PWA installierbar und offline nutzbar
-- [ ] Alle 220 Elemente funktionieren
-- [ ] Buchstabenrätsel zeigt _ für jeden Buchstaben
-- [ ] Definitions-Hinweis wird sofort angezeigt
-- [ ] Feier bei Abschluss
-- [ ] LocalStorage funktioniert
-- [ ] Export/Import funktioniert
+- [x] PWA installierbar und offline nutzbar
+- [x] Alle 220 Elemente funktionieren
+- [x] Buchstabenrätsel zeigt _ für jeden Buchstaben
+- [x] Definitions-Hinweis wird sofort angezeigt
+- [x] Feier bei Abschluss
+- [x] LocalStorage funktioniert
+- [x] Export/Import funktioniert
 - [x] Alle 27 Badges erreichbar (Test: Durchspielen im Reducer)
-- [ ] Sammlung-DAG-Graph zeigt entdeckte Elemente korrekt an
-- [ ] Element-Hervorhebung funktioniert und ist in Einstellungen ein-/ausschaltbar
-- [ ] Responsive auf Mobile, Tablet und Desktop
+- [x] Sammlung-DAG-Graph zeigt entdeckte Elemente korrekt an
+- [x] Element-Hervorhebung funktioniert und ist in Einstellungen ein-/ausschaltbar
+- [x] Responsive auf Mobile, Tablet und Desktop
+- [x] Wortschatz-Wiederholung mit persistiertem Zeitplan
+- [x] Offline-Neuladen samt Sammlung und Vokabeltraining getestet
+- [x] Sicherheitsheader und maskierbares Icon im Produktionsbuild getestet

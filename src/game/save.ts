@@ -66,6 +66,19 @@ export function sanitizeSave(raw: unknown, now = Date.now()): GameState | null {
     lastPlayed,
     totalPlayTime: count(raw.totalPlayTime),
     showHints: raw.showHints !== false,
+    reviews: Object.fromEntries(
+      isRecord(raw.reviews)
+        ? Object.entries(raw.reviews).filter(([id, value]) => unlocked.includes(id) && isRecord(value)).map(([id, value]) => {
+          const review = value as Record<string, unknown>;
+          return [id, {
+            dueAt: typeof review.dueAt === 'string' && !Number.isNaN(Date.parse(review.dueAt)) ? new Date(review.dueAt).toISOString() : new Date(now).toISOString(),
+            intervalDays: Math.min(365, count(review.intervalDays)),
+            repetitions: count(review.repetitions),
+            lastReviewed: typeof review.lastReviewed === 'string' && !Number.isNaN(Date.parse(review.lastReviewed)) ? new Date(review.lastReviewed).toISOString() : null,
+          }];
+        })
+        : [],
+    ),
   };
 }
 

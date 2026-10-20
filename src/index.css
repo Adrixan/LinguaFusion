@@ -999,6 +999,28 @@ input {
 .badge.locked .badge-icon { opacity: 0.45; }
 .badge-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 
+.review-panel { max-width: 920px; margin: 0 auto; }
+.review-intro { margin-bottom: 1.25rem; }
+.review-intro h2 { color: var(--accent); margin-bottom: 0.4rem; }
+.review-intro p, .review-hint, .review-grammar { color: var(--text-muted); }
+.review-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1rem; }
+.review-card { padding: 1.25rem; background: var(--surface); border-radius: 12px; border: 1px solid rgba(244, 162, 97, 0.25); }
+.review-symbol { font-size: 2.5rem; }
+.review-card h3 { color: var(--accent); margin: 0.35rem 0; }
+.review-grammar { margin: 0.6rem 0; }
+.review-grammar strong { color: var(--text); }
+.review-hint { font-style: italic; }
+.review-example { margin-top: 0.65rem; padding-left: 0.75rem; border-left: 3px solid var(--secondary); }
+.review-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; margin-top: 1rem; }
+.review-actions button { padding: 0.55rem 0.3rem; border-radius: 7px; background: var(--primary); color: var(--text); }
+.review-actions button:hover { background: var(--secondary); }
+.review-actions small { display: block; margin-top: 0.2rem; color: var(--text-muted); font-size: 0.7rem; }
+.review-empty { padding: 1.5rem; border-radius: 10px; background: var(--surface); }
+.review-empty p, .review-upcoming { color: var(--text-muted); }
+.review-upcoming { margin-top: 1.5rem; }
+.review-upcoming h3 { color: var(--accent); margin-bottom: 0.4rem; }
+.review-upcoming ul { padding-left: 1.25rem; }
+
 .toast {
   position: fixed;
   left: 50%;

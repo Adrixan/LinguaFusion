@@ -41,6 +41,29 @@ describe('sanitizeSave', () => {
     expect(state.tutorialDismissed).toBe(true);
   });
 
+  it('sanitizes vocabulary review records and drops unknown element ids', () => {
+    const state = sanitizeSave({ unlockedElements: ['dampf'], discoveredElements: ['dampf'], reviews: {
+      dampf: { dueAt: '2026-03-01T00:00:00.000Z', intervalDays: 3, repetitions: 2, lastReviewed: '2026-02-26T00:00:00.000Z' },
+      unknown: { dueAt: 'bad', intervalDays: 1, repetitions: 1 },
+    } }, NOW)!;
+    expect(state.reviews).toEqual({ dampf: { dueAt: '2026-03-01T00:00:00.000Z', intervalDays: 3, repetitions: 2, lastReviewed: '2026-02-26T00:00:00.000Z' } });
+  });
+
+  it('round-trips an empty vocabulary review schedule for old saves', () => {
+    const state = sanitizeSave({ unlockedElements: [], discoveredElements: [] }, NOW)!;
+    expect(state.reviews).toEqual({});
+  });
+
+  it('drops locked or malformed review entries and bounds intervals', () => {
+    const state = sanitizeSave({ unlockedElements: ['dampf'], reviews: {
+      dampf: { intervalDays: 999999, repetitions: -1, dueAt: 'invalid', lastReviewed: 'invalid' },
+      baum: { intervalDays: 1 }, wasser: null,
+    } }, NOW)!;
+    expect(state.reviews).toEqual({ dampf: {
+      intervalDays: 365, repetitions: 0, dueAt: new Date(NOW).toISOString(), lastReviewed: null,
+    } });
+  });
+
   it('drops unknown ids and always keeps the basic elements', () => {
     const state = sanitizeSave({ unlockedElements: ['dampf', 'nonsense', 7], discoveredElements: [], badges: ['first-word', 'made-up'] }, NOW)!;
     expect(state.unlockedElements).toEqual(['feuer', 'wasser', 'erde', 'luft', 'dampf']);

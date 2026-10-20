@@ -12,17 +12,19 @@ import BadgeModal from './components/BadgeModal';
 import Modal from './components/Modal';
 import SettingsModal from './components/SettingsModal';
 import StatsDisplay from './components/StatsDisplay';
+import VocabularyReview from './components/VocabularyReview';
 import Header from './components/Header';
 import './index.css';
 
 // react-flow and dagre are only needed for the Sammlung tab.
 const CollectionGraph = lazy(() => import('./components/CollectionGraph'));
 
-type Tab = 'combine' | 'collection' | 'badges' | 'stats';
+type Tab = 'combine' | 'collection' | 'review' | 'badges' | 'stats';
 
 const TABS: { id: Tab; label: (unlocked: number, earned: number) => string }[] = [
   { id: 'combine', label: () => '⚗️ Kombination' },
   { id: 'collection', label: unlocked => `📦 Sammlung (${unlocked}/${elements.length})` },
+  { id: 'review', label: () => '📚 Wiederholen' },
   { id: 'badges', label: (_, earned) => `🏅 Abzeichen (${earned}/${badges.length})` },
   { id: 'stats', label: () => '📊 Statistiken' },
 ];
@@ -122,7 +124,7 @@ function App() {
 
       <main className="main-content">
         <div className="tabs" role="tablist" aria-label="Spielbereiche" onKeyDown={event => {
-          const tabIds: Tab[] = ['combine', 'collection', 'badges', 'stats'];
+          const tabIds: Tab[] = ['combine', 'collection', 'review', 'badges', 'stats'];
           const current = tabIds.indexOf(activeTab);
           const next = event.key === 'ArrowRight' ? (current + 1) % tabIds.length
             : event.key === 'ArrowLeft' ? (current - 1 + tabIds.length) % tabIds.length : -1;
@@ -177,6 +179,8 @@ function App() {
               <CollectionGraph unlockedElements={gameState.unlockedElements} />
             </Suspense>
           )}
+
+          {activeTab === 'review' && <VocabularyReview gameState={gameState} onReview={game.reviewVocabulary} />}
 
           {activeTab === 'badges' && <BadgeDisplay badges={badges} earnedBadges={gameState.badges} gameState={gameState} />}
 

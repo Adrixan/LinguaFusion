@@ -91,6 +91,65 @@ test('element search filters the combination grid', async ({ page }) => {
   await expect(card(page, 'Lava')).toBeVisible();
 });
 
+test('vocabulary review schedules a learned word and shows grammar notes', async ({ page }) => {
+  await seedSave(page, { ...baseSave, unlockedElements: [...BASICS, 'baum'], discoveredElements: [...BASICS, 'baum'] });
+  await page.goto('/');
+  await page.getByRole('tab', { name: /Wiederholen/ }).click();
+  await expect(page.getByRole('heading', { name: 'Wortschatz wiederholen' })).toBeVisible();
+  await page.getByRole('button', { name: 'Antwort anzeigen' }).first().click();
+  await expect(page.getByText('Artikel:')).toBeVisible();
+  await page.getByRole('button', { name: /Gewusst/ }).first().click();
+  await expect(page.getByText(/Demnächst/)).toBeVisible();
+  await expect.poll(async () => (await getSave(page))?.reviews?.feuer?.intervalDays, { timeout: 10_000 }).toBe(1);
+  await page.reload();
+  await page.getByRole('tab', { name: /Wiederholen/ }).click();
+  await expect(page.locator('.review-upcoming')).toContainText('Feuer');
+  expect((await getSave(page)).perfectWords).toBe(0);
+});
+
+test('the installed app shell remains usable after going offline', async ({ page, context }) => {
+  await seedSave(page, baseSave);
+  await page.goto('/');
+  await page.evaluate(async () => {
+    if (!('serviceWorker' in navigator)) throw new Error('Service workers are unavailable');
+    await navigator.serviceWorker.ready;
+  });
+  await expect(page.getByRole('button', { name: 'Feuer' })).toBeVisible();
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Feuer' })).toBeVisible();
+  await page.getByRole('tab', { name: /Wiederholen/ }).click();
+  await expect(page.getByRole('heading', { name: 'Wortschatz wiederholen' })).toBeVisible();
+  await page.getByRole('tab', { name: /Sammlung/ }).click();
+  await expect(page.locator('.react-flow')).toBeVisible();
+});
+
+test('production preview sends security headers and includes a dedicated maskable icon', async ({ request }) => {
+  const response = await request.get('/');
+  expect(response.headers()['content-security-policy']).toContain("frame-ancestors 'none'");
+  expect(response.headers()['x-content-type-options']).toBe('nosniff');
+  const manifest = await (await request.get('/manifest.webmanifest')).json();
+  expect(manifest.icons).toContainEqual({ src: '/icons/icon-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' });
+  expect((await request.get('/icons/icon-maskable.png')).status()).toBe(200);
+});
+
+for (const width of [320, 390, 768]) {
+  test(`the game and vocabulary review fit a ${width}px viewport`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await seedSave(page, baseSave);
+    await page.goto('/');
+    const headerActions = page.locator('.header-actions');
+    const bounds = await headerActions.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+    await page.getByRole('tab', { name: /Wiederholen/ }).click();
+    const review = await page.locator('.review-card').first().boundingBox();
+    expect(review).not.toBeNull();
+    expect(review!.x + review!.width).toBeLessThanOrEqual(width);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+}
+
 test('umlauts can be typed as ue/oe/ae/ss', async ({ page }) => {
   await seedSave(page, { ...baseSave, unlockedElements: [...BASICS, 'sand'], discoveredElements: [...BASICS, 'sand'] });
   await page.goto('/');
