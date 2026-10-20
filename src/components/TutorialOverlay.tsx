@@ -3,6 +3,7 @@ import Modal from './Modal';
 
 interface TutorialOverlayProps {
   onComplete: () => void;
+  onDismiss: () => void;
 }
 
 const tutorialSteps = [
@@ -33,7 +34,7 @@ const tutorialSteps = [
   }
 ];
 
-function TutorialOverlay({ onComplete }: TutorialOverlayProps) {
+function TutorialOverlay({ onComplete, onDismiss }: TutorialOverlayProps) {
   const [currentStep, setCurrentStep] = useState(0);
 
   const handleNext = () => {
@@ -45,7 +46,7 @@ function TutorialOverlay({ onComplete }: TutorialOverlayProps) {
   };
 
   const handleSkip = () => {
-    onComplete();
+    onDismiss();
   };
 
   const step = tutorialSteps[currentStep];

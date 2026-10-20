@@ -1,6 +1,6 @@
 # Session handoff: LinguaFusion production-readiness
 
-Branch: `claude/code-review-quality-9ycy0g` (no PR opened yet).
+Branch: `fix/linguafusion-complete-audit`.
 
 ## Done
 - Review of the whole app; bugs reproduced in a headless browser, then fixed.
@@ -16,7 +16,16 @@ Branch: `claude/code-review-quality-9ycy0g` (no PR opened yet).
 - `hintsUsed` replaced by `mistakes`; hints are always visible, so a hint counter had no meaning.
 - Removing node_modules/dist from git: if production is deployed by pulling `dist/` from the repo, switch the deploy to build in CI first.
 
+## Completed in this session
+- Puzzle wrong guesses are persisted per element across reloads, tab switches and skips; retrying cannot count as perfect.
+- Save format migrated to version 3 with tutorial dismissal and puzzle-attempt data.
+- Revision-checked localStorage writes, storage-event synchronization, conflict messaging and persistence failure messaging were added.
+- Tutorial dismissal is distinct from completion; tutorial replay is available in Settings.
+- Added combination-grid search/category filters, collection graph search, graph/list collection views, details, viewport persistence and keyboard tab navigation.
+- Added visible badge descriptions/progress, explicit icon button labels, modal background inertness, mobile layout improvements and accurate floor-based progress percentages.
+- Added regression tests and verified 61 unit tests, lint, typecheck, build, audit, and 12 E2E tests with `/usr/bin/chromium`.
+
 ## Open
-- Submodules `.github/copilot-instructions` and `.kilocode/glm5-instructions` are empty in this checkout; `agents.md` is an unfilled template.
-- Maskable icon reuses the regular 512 px icon (no safe zone padding).
-- Not done: keyboard navigation of the Sammlung graph, multi-tab save conflicts, hosting headers (CSP is a meta tag; a real header is stronger).
+- Hosting should send CSP as an HTTP response header rather than only a meta tag.
+- The maskable icon still reuses the regular 512 px icon without safe-zone padding.
+- Multi-tab behavior is conservative: the newest remote snapshot wins and users are warned to use one tab at a time.

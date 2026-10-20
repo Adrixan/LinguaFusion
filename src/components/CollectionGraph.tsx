@@ -31,17 +31,18 @@ const CATEGORY_COLORS: Record<ElementCategory, string> = {
 };
 
 function ElementNode({ data }: NodeProps) {
-  const { label, symbol, category, discovered } = data as {
+  const { label, symbol, category, discovered, matches } = data as {
     label: string;
     symbol: string;
     category: ElementCategory;
     discovered: boolean;
+    matches: boolean;
   };
   const color = CATEGORY_COLORS[category] ?? '#9E9E9E';
 
   return (
     <div
-      className={`graph-node ${discovered ? 'discovered' : 'undiscovered'}`}
+      className={`graph-node ${discovered ? 'discovered' : 'undiscovered'} ${matches ? '' : 'search-dimmed'}`}
       style={{ borderColor: discovered ? color : '#555' }}
     >
       <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }} />
@@ -90,7 +91,12 @@ function buildLayout(all: Element[]) {
 const LAYOUT = buildLayout(elements);
 
 function CollectionGraph({ unlockedElements }: CollectionGraphProps) {
+  const [query, setQuery] = useState('');
+  const [view, setView] = useState<'graph' | 'list'>('graph');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const discoveredSet = useMemo(() => new Set(unlockedElements), [unlockedElements]);
+  const matches = useMemo(() => elements.filter(el => discoveredSet.has(el.id) && el.name.toLocaleLowerCase('de-AT').includes(query.toLocaleLowerCase('de-AT'))), [discoveredSet, query]);
+  const matchingIds = useMemo(() => new Set(matches.map(element => element.id)), [matches]);
 
   const nodes: Node[] = useMemo(
     () =>
@@ -98,10 +104,10 @@ function CollectionGraph({ unlockedElements }: CollectionGraphProps) {
         id: el.id,
         type: 'element',
         position: LAYOUT.positions.get(el.id) ?? { x: 0, y: 0 },
-        data: { label: el.name, symbol: el.symbol, category: el.category, discovered: discoveredSet.has(el.id), hint: el.hint },
+        data: { label: el.name, symbol: el.symbol, category: el.category, discovered: discoveredSet.has(el.id), hint: el.hint, matches: !query || matchingIds.has(el.id) },
         draggable: false,
       })),
-    [discoveredSet],
+    [discoveredSet, matchingIds, query],
   );
 
   // Edges are only drawn for discovered elements; showing them for hidden ones would give away the recipes.
@@ -122,19 +128,43 @@ function CollectionGraph({ unlockedElements }: CollectionGraphProps) {
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
     const data = node.data as { discovered: boolean; hint: string; label: string };
+    setSelectedId(data.discovered ? node.id : null);
     setTooltip(data.discovered ? `${data.label}: ${data.hint}` : 'Noch nicht entdeckt');
   }, []);
 
   const onPaneClick = useCallback(() => setTooltip(null), []);
 
   const onInit = useCallback((instance: ReactFlowInstance) => {
+    let saved: string | null = null;
+    try { saved = sessionStorage.getItem('linguafusion-collection-viewport'); } catch { /* Storage can be disabled. */ }
+    if (saved) {
+      try {
+        const viewport = JSON.parse(saved) as { x: number; y: number; zoom: number };
+        instance.setViewport(viewport);
+        return;
+      } catch { /* Fall back to the basics if the session value is invalid. */ }
+    }
     instance.fitView({ nodes: BASIC_ELEMENT_IDS.map(id => ({ id })), maxZoom: 1.2, padding: 0.5 });
   }, []);
 
-  const progress = Math.round((unlockedElements.length / elements.length) * 100);
+  const onMoveEnd = useCallback((_: unknown, viewport: { x: number; y: number; zoom: number }) => {
+    try { sessionStorage.setItem('linguafusion-collection-viewport', JSON.stringify(viewport)); } catch { /* Viewport persistence is optional. */ }
+  }, []);
+
+  const progress = Math.floor((unlockedElements.length / elements.length) * 100);
+  const selectedElement = selectedId ? elements.find(element => element.id === selectedId) : null;
 
   return (
     <div className="collection-graph-wrapper">
+      <label className="collection-search">
+        Sammlung durchsuchen
+        <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Element suchen…" />
+      </label>
+      <div className="collection-view-controls" role="group" aria-label="Sammlungsansicht">
+        <button type="button" aria-pressed={view === 'graph'} onClick={() => setView('graph')}>Graph</button>
+        <button type="button" aria-pressed={view === 'list'} onClick={() => setView('list')}>Liste</button>
+        {query && <span aria-live="polite">{matches.length} Treffer</span>}
+      </div>
       <div className="collection-graph-header">
         <div className="progress-text">
           {unlockedElements.length} / {elements.length} Elemente entdeckt ({progress}%)
@@ -144,7 +174,28 @@ function CollectionGraph({ unlockedElements }: CollectionGraphProps) {
         </div>
       </div>
 
-      <div className="collection-graph-container">
+      {view === 'list' ? (
+        <div className="collection-list-view">
+          {matches.length === 0 ? <p>Keine entdeckten Elemente passen zu deiner Suche.</p> : (
+            <div className="collection-list">
+              {matches.map(element => (
+                <button key={element.id} type="button" aria-pressed={selectedId === element.id} onClick={() => setSelectedId(element.id)}>
+                  <span aria-hidden="true">{element.symbol}</span> {element.name}
+                </button>
+              ))}
+            </div>
+          )}
+          {selectedElement && discoveredSet.has(selectedElement.id) && (
+            <aside className="collection-item-detail" aria-live="polite">
+              <h3>{selectedElement.symbol} {selectedElement.name}</h3>
+              <p>{selectedElement.hint}</p>
+              {selectedElement.combinations.length > 0 && (
+                <p>Entsteht aus: {selectedElement.combinations[0].map(id => elements.find(element => element.id === id)?.name ?? id).join(' + ')}</p>
+              )}
+            </aside>
+          )}
+        </div>
+      ) : <div className="collection-graph-container">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -154,6 +205,7 @@ function CollectionGraph({ unlockedElements }: CollectionGraphProps) {
           onNodeClick={onNodeClick}
           onPaneClick={onPaneClick}
           onInit={onInit}
+          onMoveEnd={onMoveEnd}
           minZoom={0.1}
           maxZoom={2}
           proOptions={{ hideAttribution: true }}
@@ -177,7 +229,7 @@ function CollectionGraph({ unlockedElements }: CollectionGraphProps) {
             </div>
           )}
         </div>
-      </div>
+      </div>}
     </div>
   );
 }

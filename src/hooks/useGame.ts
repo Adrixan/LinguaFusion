@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Element } from '../data/elements';
 import { Badge, getBadgeById } from '../data/badges';
-import { gameReducer, getPendingElement, resolveCombination, GameState } from '../game/state';
-import { loadGame, saveGame, parseSave, serializeSave, LoadStatus } from '../game/save';
+import { gameReducer, getPendingElement, resolveCombination, GameAction, GameState } from '../game/state';
+import { loadGame, saveGameIfCurrent, parseSave, serializeSave, LoadStatus, STORAGE_KEY } from '../game/save';
 
 export type { GameState } from '../game/state';
 
 export interface Notice {
-  kind: 'invalid' | 'known' | 'skipped';
+  kind: 'invalid' | 'known' | 'skipped' | 'selection';
   text: string;
 }
 
 const SAVE_DEBOUNCE_MS = 100;
-const TICK_MS = 15_000;
+const TICK_MS = 5_000;
 
 export interface UseGame {
   gameState: GameState;
@@ -30,37 +30,87 @@ export interface UseGame {
   clearSelection: () => void;
   combine: () => void;
   solveWord: (wrongAttempts: number) => void;
+  wrongGuess: () => void;
   skipWord: () => void;
   dismissSolved: () => void;
   dismissBadge: () => void;
   completeTutorial: () => void;
+  dismissTutorial: () => void;
+  replayTutorial: () => void;
   toggleHints: () => void;
   exportSave: () => string;
   importSave: (text: string) => boolean;
   resetGame: () => void;
+  persistenceError: boolean;
+  saveConflict: boolean;
 }
 
 export function useGame(): UseGame {
   const [initial] = useState(() => loadGame());
   const [gameState, dispatch] = useReducer(gameReducer, initial.state);
+  const revision = useRef(initial.revision);
+  const pendingActions = useRef<GameAction[]>([]);
+  const skipNextSave = useRef(false);
+  const hasSaved = useRef(false);
 
   const [selectedElements, setSelectedElements] = useState<string[]>([]);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [lastSolved, setLastSolved] = useState<Element | null>(null);
   const [badgeQueue, setBadgeQueue] = useState<string[]>([]);
+  const [persistenceError, setPersistenceError] = useState(false);
+  const [saveConflict, setSaveConflict] = useState(false);
 
   const pendingElement = useMemo(() => getPendingElement(gameState), [gameState]);
+  const dispatchLocal = useCallback((action: GameAction) => {
+    const stored = loadGame();
+    if (stored.revision > revision.current) {
+      revision.current = stored.revision;
+      latestState.current = stored.state;
+      pendingActions.current = [];
+      dispatch({ type: 'sync', state: stored.state });
+    }
+    pendingActions.current.push(action);
+    latestState.current = gameReducer(latestState.current, action);
+    dispatch(action);
+  }, []);
 
   // Persistence: debounced write on change, immediate flush when the page is hidden or closed.
   const latestState = useRef(gameState);
   useEffect(() => {
     latestState.current = gameState;
-    const timeoutId = setTimeout(() => saveGame(gameState), SAVE_DEBOUNCE_MS);
+    if (skipNextSave.current && pendingActions.current.length === 0) {
+      skipNextSave.current = false;
+      return;
+    }
+    skipNextSave.current = false;
+    const timeoutId = setTimeout(() => {
+      if (pendingActions.current.length === 0 && hasSaved.current) return;
+      const result = saveGameIfCurrent(latestState.current, revision.current);
+      if (result === 'saved') {
+        revision.current += 1;
+        pendingActions.current = [];
+        hasSaved.current = true;
+        setSaveConflict(false);
+      }
+      setPersistenceError(result === 'unavailable');
+      setSaveConflict(result === 'conflict');
+    }, SAVE_DEBOUNCE_MS);
     return () => clearTimeout(timeoutId);
   }, [gameState]);
 
   useEffect(() => {
-    const flush = () => saveGame(latestState.current);
+    const flush = () => {
+      if (pendingActions.current.length === 0 && hasSaved.current) return;
+      const result = saveGameIfCurrent(latestState.current, revision.current);
+      if (result === 'saved') {
+        revision.current += 1;
+        pendingActions.current = [];
+        hasSaved.current = true;
+        setSaveConflict(false);
+      }
+      setPersistenceError(result === 'unavailable');
+      setSaveConflict(result === 'conflict');
+    };
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') flush();
     };
@@ -72,15 +122,63 @@ export function useGame(): UseGame {
     };
   }, []);
 
-  // Play time only counts while the tab is visible.
   useEffect(() => {
-    const id = setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        dispatch({ type: 'tick', elapsedMs: TICK_MS, now: Date.now() });
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEY) return;
+      try {
+        const raw: unknown = event.newValue ? JSON.parse(event.newValue) : null;
+        const remote = raw ? parseSave(JSON.stringify(raw)) : loadGame().state;
+        if (!remote) return;
+        const remoteRevision = raw && typeof raw === 'object' && 'revision' in raw && typeof raw.revision === 'number' ? raw.revision : 0;
+        if (remoteRevision <= revision.current && event.newValue !== null) return;
+        revision.current = remoteRevision;
+        hasSaved.current = true;
+        // A remote snapshot may be a reset/import. Never replay old gameplay over it.
+        const hadPendingActions = pendingActions.current.length > 0;
+        pendingActions.current = [];
+        latestState.current = remote;
+        setSelectedElements([]);
+        setLastSolved(null);
+        setBadgeQueue([]);
+        setNotice({ kind: 'known', text: 'Spielstand aus einem anderen Tab übernommen.' });
+        skipNextSave.current = true;
+        dispatch({ type: 'sync', state: remote });
+        setSaveConflict(hadPendingActions);
+      } catch (error) {
+        console.error('Could not synchronize save from another tab:', error);
       }
-    }, TICK_MS);
-    return () => clearInterval(id);
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
+
+  // Count actual visible elapsed time and flush partial intervals on hide/page exit.
+  useEffect(() => {
+    let startedAt = document.visibilityState === 'visible' ? performance.now() : null;
+    const flush = () => {
+      if (startedAt === null) return;
+      const elapsedMs = Math.round(performance.now() - startedAt);
+      startedAt = performance.now();
+      if (elapsedMs > 0) dispatchLocal({ type: 'tick', elapsedMs, now: Date.now() });
+    };
+    const interval = window.setInterval(flush, TICK_MS);
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        flush();
+        startedAt = null;
+      } else {
+        startedAt = performance.now();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', flush);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', flush);
+      flush();
+    };
+  }, [dispatchLocal]);
 
   // Badges are granted by the reducer; this only turns newly granted ones into a celebration queue.
   const announcedBadges = useRef(new Set(initial.state.badges));
@@ -100,8 +198,9 @@ export function useGame(): UseGame {
 
   const selectElement = useCallback((id: string) => {
     setNotice(null);
-    setSelectedElements(prev => (prev.length >= 2 ? [id] : [...prev, id]));
-  }, []);
+    if (selectedElements.length >= 2) setNotice({ kind: 'selection', text: 'Die beiden Slots wurden durch deine neue Auswahl ersetzt.' });
+    setSelectedElements(prev => prev.length < 2 ? [...prev, id] : [id]);
+  }, [selectedElements.length]);
 
   const removeSelected = useCallback((slotIndex: number) => {
     setSelectedElements(prev => prev.filter((_, index) => index !== slotIndex));
@@ -116,7 +215,7 @@ export function useGame(): UseGame {
     if (selectedElements.length !== 2 || pendingElement) return;
     const [a, b] = selectedElements;
     const outcome = resolveCombination(gameState, a, b);
-    dispatch({ type: 'combine', a, b, now: Date.now() });
+    dispatchLocal({ type: 'combine', a, b, now: Date.now() });
     setSelectedElements([]);
     if (outcome.kind === 'invalid') {
       setNotice({ kind: 'invalid', text: 'Aus dieser Kombination entsteht nichts.' });
@@ -125,30 +224,41 @@ export function useGame(): UseGame {
     } else {
       setNotice(null);
     }
-  }, [selectedElements, pendingElement, gameState]);
+  }, [selectedElements, pendingElement, gameState, dispatchLocal]);
 
   const solveWord = useCallback((wrongAttempts: number) => {
     if (!pendingElement) return;
-    dispatch({ type: 'solve', elementId: pendingElement.id, wrongAttempts, now: Date.now() });
+    dispatchLocal({ type: 'solve', elementId: pendingElement.id, wrongAttempts, now: Date.now() });
     setLastSolved(pendingElement);
-  }, [pendingElement]);
+  }, [pendingElement, dispatchLocal]);
+
+  const wrongGuess = useCallback(() => {
+    if (!pendingElement) return;
+    dispatchLocal({ type: 'wrongGuess', elementId: pendingElement.id, now: Date.now() });
+  }, [pendingElement, dispatchLocal]);
 
   const skipWord = useCallback(() => {
     if (!pendingElement) return;
-    dispatch({ type: 'skip', elementId: pendingElement.id });
-    setNotice({ kind: 'skipped', text: 'Übersprungen. Kombiniere die Elemente nochmal, um es erneut zu versuchen.' });
-  }, [pendingElement]);
+    dispatchLocal({ type: 'skip', elementId: pendingElement.id, now: Date.now() });
+    setNotice({ kind: 'skipped', text: `Übersprungen. Kombiniere die Elemente nochmal, um es erneut zu versuchen. Bisherige Fehlversuche: ${gameState.puzzleAttempts[pendingElement.id] ?? 0}.` });
+  }, [pendingElement, gameState.puzzleAttempts, dispatchLocal]);
 
   const dismissSolved = useCallback(() => setLastSolved(null), []);
   const dismissBadge = useCallback(() => setBadgeQueue(queue => queue.slice(1)), []);
 
-  const completeTutorial = useCallback(() => dispatch({ type: 'completeTutorial', now: Date.now() }), []);
-  const toggleHints = useCallback(() => dispatch({ type: 'toggleHints' }), []);
+  const completeTutorial = useCallback(() => dispatchLocal({ type: 'completeTutorial', now: Date.now() }), [dispatchLocal]);
+  const dismissTutorial = useCallback(() => dispatchLocal({ type: 'dismissTutorial', now: Date.now() }), [dispatchLocal]);
+  const replayTutorial = useCallback(() => {
+    dispatchLocal({ type: 'replayTutorial', now: Date.now() });
+  }, [dispatchLocal]);
+  const toggleHints = useCallback(() => dispatchLocal({ type: 'toggleHints' }), [dispatchLocal]);
 
   const exportSave = useCallback((): string => {
-    dispatch({ type: 'markDataTransferred', now: Date.now() });
-    return serializeSave(gameState);
-  }, [gameState]);
+    const action: GameAction = { type: 'markDataTransferred', now: Date.now() };
+    const exported = gameReducer(gameState, action);
+    dispatchLocal(action);
+    return serializeSave(exported);
+  }, [gameState, dispatchLocal]);
 
   const importSave = useCallback((text: string): boolean => {
     const imported = parseSave(text);
@@ -156,15 +266,15 @@ export function useGame(): UseGame {
     // Badges that come with the file are not news; only ones earned by the import itself are.
     announcedBadges.current = new Set(imported.badges);
     clearTransientUi();
-    dispatch({ type: 'replace', state: imported, now: Date.now() });
+    dispatchLocal({ type: 'replace', state: imported, now: Date.now() });
     return true;
-  }, [clearTransientUi]);
+  }, [clearTransientUi, dispatchLocal]);
 
   const resetGame = useCallback(() => {
     announcedBadges.current = new Set();
     clearTransientUi();
-    dispatch({ type: 'reset', now: Date.now() });
-  }, [clearTransientUi]);
+    dispatchLocal({ type: 'reset', now: Date.now() });
+  }, [clearTransientUi, dispatchLocal]);
 
   const activeBadge = badgeQueue.length > 0 ? getBadgeById(badgeQueue[0]) ?? null : null;
 
@@ -181,13 +291,18 @@ export function useGame(): UseGame {
     clearSelection,
     combine,
     solveWord,
+    wrongGuess,
     skipWord,
     dismissSolved,
     dismissBadge,
     completeTutorial,
+    dismissTutorial,
+    replayTutorial,
     toggleHints,
     exportSave,
     importSave,
     resetGame,
+    persistenceError,
+    saveConflict,
   };
 }

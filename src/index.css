@@ -84,6 +84,29 @@ input {
   gap: 0.5rem;
 }
 
+.persistence-warning {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2100;
+  max-width: min(92vw, 620px);
+  padding: 0.75rem 1rem;
+  background: var(--error);
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.persistence-warning button {
+  margin-left: 0.75rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 4px;
+  background: white;
+  color: var(--error);
+  font-weight: 700;
+}
+
 .icon-btn {
   background: var(--surface);
   color: var(--text);
@@ -163,6 +186,31 @@ input {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: 0.75rem;
+}
+
+.element-filters {
+  display: grid;
+  grid-template-columns: auto minmax(160px, 1fr) auto minmax(150px, 0.7fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.element-filters input,
+.element-filters select,
+.collection-search input {
+  min-width: 0;
+  padding: 0.55rem 0.7rem;
+  background: var(--surface);
+  border: 1px solid var(--secondary);
+  border-radius: 6px;
+  color: var(--text);
+}
+
+.element-filters span,
+.collection-search-results {
+  color: var(--text-muted);
+  font-size: 0.85rem;
 }
 
 .element-card {
@@ -467,6 +515,15 @@ input {
   color: var(--text-muted);
 }
 
+.badge-description,
+.badge-progress {
+  margin-top: 0.25rem;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.badge-progress { color: var(--accent); }
+
 .badge.locked {
   opacity: 0.3;
   filter: grayscale(1);
@@ -634,6 +691,14 @@ input {
   .element-grid {
     grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   }
+
+  .header-actions { gap: 0.25rem; }
+  .header .progress-bar { max-width: 32vw; }
+  .element-filters { grid-template-columns: 1fr; }
+  .collection-search { align-items: stretch; flex-direction: column; }
+  .combination-area { gap: 0.35rem; padding: 1rem 0.35rem; }
+  .combination-slot { width: 76px; height: 86px; }
+  .guess-input input { min-width: 0; width: min(200px, 55vw); }
 }
 
 .element-category-basic { border-top: 3px solid var(--accent); }
@@ -682,6 +747,67 @@ input {
   padding: 12px 16px;
   text-align: center;
 }
+
+.collection-search {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  color: var(--text-muted);
+}
+
+.collection-search input { flex: 1; }
+.collection-search-results { margin: 0 1rem 0.5rem; }
+.graph-node.search-dimmed { opacity: 0.16; }
+
+.collection-view-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0 1rem 0.5rem;
+}
+
+.collection-view-controls button,
+.collection-list button {
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.collection-view-controls button[aria-pressed="true"],
+.collection-list button[aria-pressed="true"] {
+  outline: 2px solid var(--accent);
+}
+
+.collection-list-view {
+  overflow: auto;
+  flex: 1;
+  padding: 1rem;
+  background: var(--background);
+  border-radius: 8px;
+}
+
+.collection-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+
+.collection-list button { text-align: left; }
+.collection-list button span { margin-right: 0.4rem; }
+
+.collection-item-detail {
+  position: sticky;
+  bottom: 0;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--surface);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+}
+
+.collection-item-detail h3 { margin-bottom: 0.4rem; }
 
 .collection-graph-header .progress-text {
   font-size: 0.9rem;
@@ -843,6 +969,35 @@ input {
 .notice-skipped {
   border-left: 4px solid var(--warning);
 }
+
+.notice-selection { border-left: 4px solid var(--accent); }
+
+.combination-area > .combination-slot {
+  flex-shrink: 0;
+}
+
+.combination-area > .combination-slot[aria-hidden="true"] {
+  cursor: default;
+}
+
+.combination-element:focus-visible,
+.graph-node:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .collection-search { align-items: stretch; flex-direction: column; }
+  .header { flex-wrap: wrap; gap: 0.5rem; }
+  .header h1 { font-size: 1rem; }
+  .tabs .tab { padding: 0.65rem 0.75rem; }
+  .collection-graph-wrapper { height: 75dvh; min-height: 400px; }
+  .badge-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+}
+
+.badge.locked { opacity: 1; }
+.badge.locked .badge-icon { opacity: 0.45; }
+.badge-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 
 .toast {
   position: fixed;

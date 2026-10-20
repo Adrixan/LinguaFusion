@@ -118,7 +118,7 @@ export const elements: Element[] = [
   { id: 'mehl', name: 'Mehl', symbol: '🫗', hint: 'Feines, weißes Pulver aus gemahlenem Getreide', combinations: [['getreide', 'stein']], category: 'food' },
   { id: 'teig', name: 'Teig', symbol: '🫓', hint: 'Weiche Masse aus Mehl und Wasser', combinations: [['mehl', 'wasser']], category: 'food' },
   { id: 'brot', name: 'Brot', symbol: '🍞', hint: 'Gebackenes Grundnahrungsmittel aus Teig', combinations: [['teig', 'feuer']], category: 'food' },
-  { id: 'kuchen', name: 'Kuchen', symbol: '🎂', hint: 'Süßes Gebäck, oft mit Sahne und Früchten', combinations: [['teig', 'zucker']], category: 'food' },
+  { id: 'kuchen', name: 'Kuchen', symbol: '🎂', hint: 'Süßes Gebäck, oft mit Schlagobers und Früchten', combinations: [['teig', 'zucker']], category: 'food' },
   { id: 'kaese', name: 'Käse', symbol: '🧀', hint: 'Festes Milchprodukt mit vielen Sorten', combinations: [['milch', 'feuer']], category: 'food' },
   { id: 'butter', name: 'Butter', symbol: '🧈', hint: 'Gelbes Streichfett aus Milch', combinations: [['milch', 'energie']], category: 'food' },
   { id: 'wein', name: 'Wein', symbol: '🍷', hint: 'Alkoholisches Getränk aus vergorenen Trauben', combinations: [['obst', 'wasser']], category: 'food' },

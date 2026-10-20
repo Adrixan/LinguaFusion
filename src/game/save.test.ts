@@ -33,6 +33,14 @@ describe('sanitizeSave', () => {
     expect(sanitizeSave(JSON.parse(JSON.stringify(state)), NOW)).toEqual(state);
   });
 
+  it('round-trips persisted puzzle attempts and tutorial dismissal', () => {
+    const state = sanitizeSave({
+      unlockedElements: [], discoveredElements: [], puzzleAttempts: { dampf: 2, unknown: 9 }, tutorialDismissed: true,
+    }, NOW)!;
+    expect(state.puzzleAttempts).toEqual({ dampf: 2 });
+    expect(state.tutorialDismissed).toBe(true);
+  });
+
   it('drops unknown ids and always keeps the basic elements', () => {
     const state = sanitizeSave({ unlockedElements: ['dampf', 'nonsense', 7], discoveredElements: [], badges: ['first-word', 'made-up'] }, NOW)!;
     expect(state.unlockedElements).toEqual(['feuer', 'wasser', 'erde', 'luft', 'dampf']);
@@ -95,14 +103,14 @@ describe('parseSave / serializeSave', () => {
 
 describe('loadGame', () => {
   it('starts fresh without a save', () => {
-    expect(loadGame(fakeStorage(), NOW)).toEqual({ state: createInitialState(NOW), status: 'fresh' });
+    expect(loadGame(fakeStorage(), NOW)).toEqual({ state: createInitialState(NOW), status: 'fresh', revision: 0 });
   });
 
   it('loads the current save', () => {
     const storage = fakeStorage();
     const state = { ...createInitialState(NOW), wordsSolved: 3 };
     saveGame(state, storage);
-    expect(loadGame(storage, NOW)).toEqual({ state, status: 'loaded' });
+    expect(loadGame(storage, NOW)).toEqual({ state, status: 'loaded', revision: 0 });
   });
 
   it('migrates a save stored under the legacy key', () => {
@@ -123,7 +131,7 @@ describe('loadGame', () => {
   it('recovers from a corrupt save and keeps a backup of it', () => {
     const corrupt = JSON.stringify({ unlockedElements: null });
     const storage = fakeStorage({ [STORAGE_KEY]: corrupt });
-    expect(loadGame(storage, NOW)).toEqual({ state: createInitialState(NOW), status: 'recovered' });
+    expect(loadGame(storage, NOW)).toEqual({ state: createInitialState(NOW), status: 'recovered', revision: 0 });
     expect(storage.data.get(CORRUPT_BACKUP_KEY)).toBe(corrupt);
   });
 
@@ -139,5 +147,14 @@ describe('loadGame', () => {
     };
     expect(loadGame(broken, NOW).state).toEqual(createInitialState(NOW));
     expect(() => saveGame(createInitialState(NOW), broken)).not.toThrow();
+  });
+
+  it('rejects stale revisioned writes and accepts the current revision', async () => {
+    const { saveGameIfCurrent } = await import('./save');
+    const storage = fakeStorage();
+    const state = createInitialState(NOW);
+    expect(saveGameIfCurrent(state, 0, storage)).toBe('saved');
+    expect(saveGameIfCurrent({ ...state, wordsSolved: 2 }, 0, storage)).toBe('conflict');
+    expect(saveGameIfCurrent({ ...state, wordsSolved: 1 }, 1, storage)).toBe('saved');
   });
 });

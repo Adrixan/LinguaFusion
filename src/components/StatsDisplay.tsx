@@ -11,7 +11,7 @@ function StatsDisplay({ gameState, totalElements, onReset }: StatsDisplayProps) 
   const playTimeHours = Math.floor(playTimeMinutes / 60);
   const remainingMinutes = playTimeMinutes % 60;
 
-  const progress = Math.round((gameState.unlockedElements.length / totalElements) * 100);
+  const progress = Math.floor((gameState.unlockedElements.length / totalElements) * 100);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);

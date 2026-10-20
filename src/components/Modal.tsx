@@ -21,6 +21,11 @@ function Modal({ ariaLabel, onClose, className = '', children }: ModalProps) {
     const dialog = dialogRef.current;
     if (!dialog) return;
     const previouslyFocused = document.activeElement as HTMLElement | null;
+    const background = Array.from(document.querySelectorAll<HTMLElement>(
+      '.app-container > header, .app-container > main, .app-container > .toast, .app-container > .persistence-warning',
+    ));
+    const previousInert = background.map(element => element.inert);
+    background.forEach(element => { element.inert = true; });
     const focusable = () => Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE));
 
     if (!dialog.contains(document.activeElement)) {
@@ -53,6 +58,7 @@ function Modal({ ariaLabel, onClose, className = '', children }: ModalProps) {
     document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
+      background.forEach((element, index) => { element.inert = previousInert[index]; });
       previouslyFocused?.focus?.();
     };
   }, []);
