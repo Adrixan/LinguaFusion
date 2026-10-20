@@ -32,6 +32,7 @@ const contentSecurityPolicy = (): Plugin => ({
 });
 
 export default defineConfig({
+  base: './',
   define: {
     __APP_VERSION__: JSON.stringify(version),
   },
@@ -49,20 +50,20 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png', 'icons/icon.svg'],
       manifest: {
-        id: '/',
+        id: './',
         name: 'LinguaFusion',
         short_name: 'LinguaFusion',
         description: 'Lerne Deutsch durch das Kombinieren von Elementen!',
         lang: 'de-AT',
-        start_url: '/',
-        scope: '/',
+        start_url: './',
+        scope: './',
         display: 'standalone',
         theme_color: '#2D1B4E',
         background_color: '#1A1A2E',
         icons: [
-          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: '/icons/icon-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: './icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: './icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: './icons/icon-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
