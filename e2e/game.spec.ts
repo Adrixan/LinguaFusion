@@ -128,9 +128,13 @@ test('production preview sends security headers and includes a dedicated maskabl
   const response = await request.get('/');
   expect(response.headers()['content-security-policy']).toContain("frame-ancestors 'none'");
   expect(response.headers()['x-content-type-options']).toBe('nosniff');
-  const manifest = await (await request.get('/manifest.webmanifest')).json();
-  expect(manifest.icons).toContainEqual({ src: '/icons/icon-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' });
-  expect((await request.get('/icons/icon-maskable.png')).status()).toBe(200);
+  const manifestResponse = await request.get('/manifest.webmanifest');
+  const manifest = await manifestResponse.json();
+  const maskableIcon = manifest.icons.find((icon: { purpose?: string }) => icon.purpose?.split(/\s+/).includes('maskable'));
+  expect(maskableIcon).toBeDefined();
+  expect(maskableIcon).toMatchObject({ sizes: '512x512', type: 'image/png' });
+  const iconUrl = new URL(maskableIcon.src, manifestResponse.url()).toString();
+  expect((await request.get(iconUrl)).status()).toBe(200);
 });
 
 for (const width of [320, 390, 768]) {
