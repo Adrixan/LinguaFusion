@@ -1,5 +1,8 @@
 # Session handoff: LinguaFusion production-readiness
 
+## 2026-10-24 release audit remediation
+- Compatible transitive lockfile refresh: fast-uri 3.1.9 and serialize-javascript 7.1.4. Clean install, zero-finding audit, lint, typecheck, 67 tests and production/PWA build passed. Main `ec6f228` merged/pushed and GitHub CI passed.
+
 ## CI follow-up (2026-10-21)
 - Fixed the maskable-icon E2E assertion to resolve the manifest's relative icon URL against the manifest response URL, preserving nested-path deployment support.
 - Verified lint, typecheck, 67 unit tests, production build, audit (0 findings), and the focused maskable-icon E2E (passed with system Chromium). The full E2E attempt initially lacked Playwright's bundled browser; the focused test passed after selecting system Chromium.
