@@ -21,6 +21,8 @@ React 19 · TypeScript · Vite 8 · @xyflow/react · dagre · vite-plugin-pwa
 
 ## Getting Started
 
+Requires Node.js 24 (the current LTS line) or newer.
+
 ```sh
 npm install
 npm run dev
@@ -41,7 +43,7 @@ npm test            # Vitest: data integrity, game rules, persistence
 npm run build && npm run test:e2e   # Playwright against the production build
 ```
 
-`npx playwright install chromium` is needed once for the end-to-end tests; set `PW_CHROMIUM_PATH` to use an existing Chromium instead. CI runs all of the above plus `npm audit`.
+`npx playwright install chromium` is needed once for the end-to-end tests; set `PW_CHROMIUM_PATH` to use an existing Chromium instead. CI runs all of the above plus the audit gate `npm run audit`.
 
 ### Local verification
 
@@ -54,12 +56,16 @@ npm run typecheck
 npm test
 npm run build
 PW_CHROMIUM_PATH=/usr/bin/chromium npm run test:e2e
-npm audit --audit-level=high
+npm run audit
 ```
 
 If Chromium is not installed at that path, run `npx playwright install chromium` once and omit `PW_CHROMIUM_PATH`. The end-to-end suite uses the production build through `vite preview` and covers the tutorial, combinations, persisted puzzles, importing, collection, vocabulary review, and all tabs.
 
-Since Vite 8 no installed dependency needs an install script (`esbuild` is no longer pulled in). The repository `.npmrc` still allowlists only the `esbuild` postinstall script in case a tool brings it back; review any other install script before approving it.
+No installed dependency runs an install script (Vite 8 no longer pulls in `esbuild`), so the repository needs no script allowlist. If a new dependency brings one, npm reports it as unreviewed; review the script before allowing it.
+
+`npm run audit` (`scripts/audit.mjs`) fails on every npm advisory except those accepted in `audit-exceptions.json`. The only accepted exception is GHSA-gcqx-w48m-w2h4 (deepmerge prototype poisoning, no fixed release), reached only at build time through `vite-plugin-pwa` > `workbox-build`; accepted by the owner on 2026-10-28.
+
+Two dependencies stay one major behind on purpose: `typescript` on 6.x, because `typescript-eslint` 8 supports only TypeScript below 6.1, and `@types/node` on 24.x, matching the Node.js LTS line used in CI and `engines`.
 
 For deployment, serve `dist/` over HTTPS and add the CSP from the generated `dist/index.html` as an HTTP response header at the hosting layer. The HTML meta policy is a fallback; response headers provide stronger enforcement.
 

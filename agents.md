@@ -2,7 +2,7 @@
 
 ## Project
 - German-language alchemy and vocabulary-learning PWA, localized for Austria.
-- React 19, strict TypeScript, Vite 8, Vitest, Playwright, React Flow and dagre; ESLint 10 flat config (`eslint.config.js`).
+- Node.js 24 (LTS), React 19, strict TypeScript 6, Vite 8, Vitest, Playwright, React Flow and dagre; ESLint 10 flat config (`eslint.config.js`).
 - Static deployment: build with `npm run build`, deploy all of `dist/`, including `.htaccess` on Apache.
 - Read `.agents/session-handoff.md` before changing code.
 
@@ -27,7 +27,7 @@
 
 ## Verification and handoff
 - `npm run lint` must report zero warnings.
-- Run `npm run typecheck`, `npm test`, `npm run build`, `npm run test:e2e`, and `npm audit --audit-level=high`.
+- Run `npm run typecheck`, `npm test`, `npm run build`, `npm run test:e2e`, and `npm run audit` (fails on any advisory not accepted in `audit-exceptions.json`; exceptions need the owner's acceptance with a reason).
 - Set `PW_CHROMIUM_PATH=/usr/bin/chromium` for the installed system browser, or install Playwright Chromium first.
 - Build before E2E tests; keep service workers enabled for offline regression coverage.
 - Record actual results and outstanding deployment limitations in `.agents/session-handoff.md`.
