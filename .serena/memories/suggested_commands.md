@@ -3,7 +3,7 @@
 ## Development
 - `npm run dev` — Start Vite dev server
 - `npm run build` — TypeScript check + Vite build
-- `npm run lint` — Run ESLint (ts,tsx)
+- `npm run lint` — Run ESLint (ts,tsx via eslint.config.js)
 - `npm run preview` — Preview production build
 - `npm run typecheck` — Check app and build configuration types
 - `npm test` — Unit tests for data, reducer, save validation and answers

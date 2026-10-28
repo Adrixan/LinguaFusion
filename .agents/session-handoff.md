@@ -1,5 +1,14 @@
 # Session handoff: LinguaFusion production-readiness
 
+## 2026-10-28 dependency unpinning (policy: latest release as minimum, no exact pins)
+- Every manifest entry now names the latest release as `^` minimum; the lockfile was regenerated from scratch (the old tree hit an ERESOLVE on `@babel/core` 8 optional peers of `@vitejs/plugin-react` 6).
+- Majors kept (all checks pass): React/React DOM 19.3.1 with `@types/react(-dom)` 19.3.0, Vite 8.3.5, `@vitejs/plugin-react` 6.1.2, `vite-plugin-pwa` 2.0.0, ESLint 10.13.0, `eslint-plugin-react-hooks` 7.1.1, `eslint-plugin-react-refresh` 0.5.7.
+- ESLint 10 dropped eslintrc: `.eslintrc.json` became `eslint.config.js` (flat config, new dev deps `@eslint/js`, `globals`), lint script lost `--ext`. The react-hooks rule set is the old v4 preset (`rules-of-hooks`, `exhaustive-deps`); the v7 preset's React Compiler rules report 2 errors in app code (`react-hooks/purity`: `Date.now()` during render in `VocabularyReview.tsx:13`; `react-hooks/immutability`: `latestState.current = gameState` in `useGame.ts:81`). Decide whether to fix them and enable `reactHooks.configs.flat.recommended`.
+- Caps kept: `typescript` `^5.9.3` (TypeScript 7.0.2 breaks: typescript-eslint 8.72 supports `<6.1.0` and fails to load, and `tsc` 7 rejects the CSS side-effect imports in `main.tsx` with TS2882; TypeScript 6.0.3 is within the typescript-eslint range and untested). `@types/node` `^22.20.5` (latest 26.6.5): types follow the Node 22 runtime of CI and the `engines` floor, not the newest Node.
+- `esbuild` is no longer installed (Vite 8 uses Rolldown/Oxc); `.npmrc` still allowlists `esbuild@0.28.2`, harmless; README updated.
+- Audit: 4 low findings, all GHSA-gcqx-w48m-w2h4 (deepmerge prototype poisoning, no patched release; build-time only via `vite-plugin-pwa` > `workbox-build` > `@rollup/plugin-node-resolve`), already present on main before this change; `npm audit --audit-level=high` passes.
+- Verified: `npm run lint`, `typecheck`, `test` (67), `build`, `test:e2e` (18, `PW_CHROMIUM_PATH=/usr/bin/chromium`) all pass.
+
 ## 2026-10-24 release audit remediation
 - Compatible transitive lockfile refresh: fast-uri 3.1.9 and serialize-javascript 7.1.4. Clean install, zero-finding audit, lint, typecheck, 67 tests and production/PWA build passed. Main `ec6f228` merged/pushed and GitHub CI passed.
 
