@@ -53,6 +53,8 @@ export function useGame(): UseGame {
   const pendingActions = useRef<GameAction[]>([]);
   const skipNextSave = useRef(false);
   const hasSaved = useRef(false);
+  // Newest reducer state, ahead of React's render cycle; read by the persistence writers below.
+  const latestState = useRef(gameState);
 
   const [selectedElements, setSelectedElements] = useState<string[]>([]);
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -76,7 +78,6 @@ export function useGame(): UseGame {
   }, []);
 
   // Persistence: debounced write on change, immediate flush when the page is hidden or closed.
-  const latestState = useRef(gameState);
   useEffect(() => {
     latestState.current = gameState;
     if (skipNextSave.current && pendingActions.current.length === 0) {

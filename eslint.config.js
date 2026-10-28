@@ -10,16 +10,7 @@ export default [
   { ignores: ['dist/', '.scratch/', 'test-results/', 'playwright-report/', 'public/sw.js'] },
   { files, ...js.configs.recommended },
   ...tseslint.configs['flat/recommended'].map(config => ({ files, ...config })),
-  {
-    files,
-    plugins: { 'react-hooks': reactHooks },
-    // The rule set of the former `plugin:react-hooks/recommended` (v4); the React Compiler rules
-    // added to the v7 preset are not enabled yet (see .agents/session-handoff.md, 2026-10-28).
-    rules: {
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
-    },
-  },
+  { files, ...reactHooks.configs.flat.recommended },
   {
     files,
     languageOptions: {

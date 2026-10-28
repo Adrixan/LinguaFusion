@@ -2,6 +2,10 @@ import { useMemo, useState } from 'react';
 import { elements } from '../data/elements';
 import { vocabularyNotes } from '../data/vocabulary';
 import { GameState, getReviewSchedule } from '../game/state';
+import { useNow } from '../hooks/useNow';
+
+// Matches the play-time tick in useGame, which used to re-render this view: due words appear within 5 s.
+const CLOCK_MS = 5_000;
 
 interface VocabularyReviewProps {
   gameState: GameState;
@@ -10,7 +14,7 @@ interface VocabularyReviewProps {
 
 function VocabularyReview({ gameState, onReview }: VocabularyReviewProps) {
   const [revealedIds, setRevealedIds] = useState<Set<string>>(() => new Set());
-  const now = Date.now();
+  const [now, refreshNow] = useNow(CLOCK_MS);
   const due = useMemo(() => elements.filter(element => {
     if (!gameState.unlockedElements.includes(element.id)) return false;
     const review = gameState.reviews[element.id];
@@ -42,7 +46,7 @@ function VocabularyReview({ gameState, onReview }: VocabularyReviewProps) {
                 <div className="review-symbol" aria-hidden="true">{revealedIds.has(element.id) ? element.symbol : '❔'}</div>
                 <h3>{revealedIds.has(element.id) ? element.name : 'Welches Wort passt?'}</h3>
                 <p className="review-hint">{element.hint}</p>
-                {!revealedIds.has(element.id) ? <button type="button" className="submit-btn" onClick={() => setRevealedIds(previous => new Set(previous).add(element.id))}>Antwort anzeigen</button> : <>
+                {!revealedIds.has(element.id) ? <button type="button" className="submit-btn" onClick={() => { refreshNow(); setRevealedIds(previous => new Set(previous).add(element.id)); }}>Antwort anzeigen</button> : <>
                 {note && <p className="review-grammar">Artikel: <strong>{note.article}</strong> {element.name} · Mehrzahl: <strong>{note.plural ?? 'keine übliche Mehrzahl in dieser Bedeutung'}</strong></p>}
                 <p className="review-example">{note ? `„${note.example}“` : 'Sprich das Wort laut aus und bilde einen eigenen Satz.'}</p>
                 <div className="review-actions" aria-label={`Wiederholung für ${element.name}`}>
@@ -50,7 +54,7 @@ function VocabularyReview({ gameState, onReview }: VocabularyReviewProps) {
                     const schedule = getReviewSchedule(review, rating, now);
                     const label = ['Nochmal', 'Gewusst', 'Leicht'][index];
                     const timing = rating === 'again' ? 'in 10 Minuten' : schedule.intervalDays === 1 ? 'morgen' : `in ${schedule.intervalDays} Tagen`;
-                    return <button key={rating} type="button" onClick={() => { onReview(element.id, rating); setRevealedIds(new Set()); }}>{label} <small>{timing}</small></button>;
+                    return <button key={rating} type="button" onClick={() => { onReview(element.id, rating); refreshNow(); setRevealedIds(new Set()); }}>{label} <small>{timing}</small></button>;
                   })}
                 </div>
                 </>}
