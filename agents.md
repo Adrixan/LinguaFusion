@@ -2,7 +2,7 @@
 
 ## Project
 - German-language alchemy and vocabulary-learning PWA, localized for Austria.
-- React 18, strict TypeScript, Vite 7, Vitest, Playwright, React Flow and dagre.
+- React 19, strict TypeScript, Vite 8, Vitest, Playwright, React Flow and dagre; ESLint 10 flat config (`eslint.config.js`).
 - Static deployment: build with `npm run build`, deploy all of `dist/`, including `.htaccess` on Apache.
 - Read `.agents/session-handoff.md` before changing code.
 

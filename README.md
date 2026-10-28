@@ -17,7 +17,7 @@
 
 ## Tech Stack
 
-React 18 · TypeScript · Vite 7 · @xyflow/react · dagre · vite-plugin-pwa
+React 19 · TypeScript · Vite 8 · @xyflow/react · dagre · vite-plugin-pwa
 
 ## Getting Started
 
@@ -59,7 +59,7 @@ npm audit --audit-level=high
 
 If Chromium is not installed at that path, run `npx playwright install chromium` once and omit `PW_CHROMIUM_PATH`. The end-to-end suite uses the production build through `vite preview` and covers the tutorial, combinations, persisted puzzles, importing, collection, vocabulary review, and all tabs.
 
-The repository `.npmrc` allowlists only the required `esbuild` postinstall script. If your package manager does not support that setting, review and approve `esbuild` explicitly before building.
+Since Vite 8 no installed dependency needs an install script (`esbuild` is no longer pulled in). The repository `.npmrc` still allowlists only the `esbuild` postinstall script in case a tool brings it back; review any other install script before approving it.
 
 For deployment, serve `dist/` over HTTPS and add the CSP from the generated `dist/index.html` as an HTTP response header at the hosting layer. The HTML meta policy is a fallback; response headers provide stronger enforcement.
 
