@@ -68,3 +68,8 @@ Delivered from `feat/vocabulary-spaced-review`, merged and pushed to `main` as `
 - Current requested scope is complete; no implementation is intentionally left in progress.
 - Unit/lint/typecheck/build and browser verification use the commands in `README.md`; system Chromium was used locally.
 - No session-owned preview server is left running. Scratch test artifacts are ignored and are not part of the delivered source.
+
+## 2026-11-07: relicensed to PolyForm Noncommercial 1.0.0
+- Peter's order: only he may make money from the games. `LICENSE` is the verbatim PolyForm Noncommercial 1.0.0 text with two Required Notice lines (copyright; selling or paid distribution needs a written licence from Peter); `package.json` license `PolyForm-Noncommercial-1.0.0`; README and `agents.md` record the decision; content (elements, recipes, vocabulary notes) CC BY-NC-SA 4.0; contributions only with a written agreement. Versions before 2026-11-07 stay AGPL-3.0 for those who received them.
+- Added the missing OFL texts for the bundled Cinzel and Nunito fonts in `public/fonts/` (shipped to `dist/fonts/`).
+- Verified: `npm run audit` (accepted deepmerge exception only), lint 0 warnings, typecheck, 67 unit tests, build, E2E 18/18.
