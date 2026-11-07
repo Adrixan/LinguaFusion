@@ -4,6 +4,7 @@
 - German-language alchemy and vocabulary-learning PWA, localized for Austria.
 - Node.js 24 (LTS), React 19, strict TypeScript 6, Vite 8, Vitest, Playwright, React Flow and dagre; ESLint 10 flat config (`eslint.config.js`).
 - Static deployment: build with `npm run build`, deploy all of `dist/`, including `.htaccess` on Apache.
+- Code licence PolyForm Noncommercial 1.0.0 since 2026-11-07 (Peter): only Peter may use it commercially; versions published before that date stay available under AGPL-3.0 to those who received them. Content (elements, recipes, vocabulary notes) CC BY-NC-SA 4.0; commercial rights reserved to Peter.
 - Read `.agents/session-handoff.md` before changing code.
 
 ## Layout

@@ -78,4 +78,9 @@ For deployment, serve `dist/` over HTTPS and add the CSP from the generated `dis
 
 ## License
 
-This project is licensed under the terms of the [AGPL-3.0](LICENSE) license.
+- Code: [PolyForm Noncommercial License 1.0.0](LICENSE) (SPDX `PolyForm-Noncommercial-1.0.0`). Use, changes and sharing for noncommercial purposes are allowed, including use by schools and other educational institutions.
+- Content (elements, recipes, vocabulary notes, examples and badge texts): [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+- Commercial use of code and content is reserved to Peter Aufner (contact: https://prof.aufner.org).
+- Contributions are accepted only with a written agreement that lets Peter Aufner license them commercially.
+- Code licence PolyForm Noncommercial 1.0.0 since 2026-11-07 (Peter): only Peter may use it commercially; versions published before that date stay available under AGPL-3.0 to those who received them.
+- Third-party parts keep their own licences: React, React Flow and dagre (MIT), and the fonts Cinzel and Nunito (SIL OFL 1.1, texts in `public/fonts/`).
