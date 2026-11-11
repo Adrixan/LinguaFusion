@@ -34,3 +34,7 @@
 - Record actual results and outstanding deployment limitations in `.agents/session-handoff.md`.
 - Update `README.md` and `SPEC.md` when behavior changes. Do not mark unverified acceptance criteria as passed.
 - Use Conventional Commits and never commit generated build or browser-test output.
+
+## Web platform (Peter, 2026-11-11)
+- New or changed HTML, CSS and client-side JS start from skill `modern-web-guidance` (installed CLI `modern-web-guidance`, not `npx`) and are checked in the browser with the `chrome-devtools` MCP.
+- Weekly modernization: `web-modernize` (Sundays 08:00, list `~/sync/ai/web-projects.txt`) runs `legacy-scan`, applies only verified behaviour-preserving fixes through this file's test and publish rules, and files larger changes in `.agents/to-do.md`.
