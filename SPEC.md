@@ -43,6 +43,11 @@
 5. **TutorialOverlay**: Schritt-für-Schritt Anleitung
 6. **CelebrationModal**: Erfolgsmeldung mit Animation
 
+### Dialoge
+- Tutorial, Einstellungen, Erfolgsmeldung und neues Abzeichen sind native modale `<dialog>`-Elemente (`showModal()`): Seite dahinter inert, Fokus bleibt im Dialog (Tab kann nur zur Browser-Oberfläche wechseln), Fokus kehrt beim Schließen zum auslösenden Element zurück.
+- Schließen mit Esc, Zurück-Geste, Klick auf den Hintergrund (`closedby="any"`; ohne `closedby`-Unterstützung, z. B. Safari, per Zeigerpositions-Fallback; Klick ins Innere und Ziehen nach außen schließen nicht) oder die Buttons im Dialog.
+- Hinweise (Toast) und Speicherwarnungen sind manuelle Popovers in der Top Layer und erscheinen auch über einem bereits offenen Dialog (bleiben dort inert).
+
 ## Funktionalität
 
 ### Element-Kombination
