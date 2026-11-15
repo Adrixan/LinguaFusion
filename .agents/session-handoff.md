@@ -73,3 +73,9 @@ Delivered from `feat/vocabulary-spaced-review`, merged and pushed to `main` as `
 - Peter's order: only he may make money from the games. `LICENSE` is the verbatim PolyForm Noncommercial 1.0.0 text with two Required Notice lines (copyright; selling or paid distribution needs a written licence from Peter); `package.json` license `PolyForm-Noncommercial-1.0.0`; README and `agents.md` record the decision; content (elements, recipes, vocabulary notes) CC BY-NC-SA 4.0; contributions only with a written agreement. Versions before 2026-11-07 stay AGPL-3.0 for those who received them.
 - Added the missing OFL texts for the bundled Cinzel and Nunito fonts in `public/fonts/` (shipped to `dist/fonts/`).
 - Verified: `npm run audit` (accepted deepmerge exception only), lint 0 warnings, typecheck, 67 unit tests, build, E2E 18/18.
+
+## 2026-11-15: web-modernize run (Modern Web Guidance)
+- `modern-web-guidance legacy-scan` on `src/`, `index.html`, `public/`, `e2e/`: 0 findings (35 rules, 33 guides, about 20 % of the corpus). Manual cross-check of those guides: puzzle input uses a native `<form>` submit (IME-safe), native checkbox, no `innerHTML`; nothing to change.
+- Missed by the scanner: `src/components/Modal.tsx` is a custom `role="dialog"` overlay with manual trap, `inert` and Esc. Migration to native `<dialog>` filed as a proposal in `.agents/to-do.md` (changes focus and dismissal semantics, needs Peter's go and new E2E tests).
+- No source change, so lint, tests, build and E2E were not re-run. Report: `~/sync/ai/web-modernize/2026-11-15/LinguaFusion.md`.
+- Next: Peter decides on the `<dialog>` proposal; from now on new web work follows the AGENTS.md web-platform rule.
