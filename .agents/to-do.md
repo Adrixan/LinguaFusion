@@ -1,0 +1,7 @@
+# To-do: proposals for Peter
+
+## Native `<dialog>` for `Modal.tsx` (web-modernize 2026-11-15, proposal, not started)
+- Today: `src/components/Modal.tsx` renders `div.modal-overlay` > `div[role=dialog][aria-modal]` and rebuilds by hand what a native modal gives: `inert` on header/main/toast/warning, Tab focus trap, Escape handler, backdrop `mousedown` close, focus return. Used by Tutorial, Settings, BadgeModal and the "Richtig" celebration; all four pass `onClose`.
+- Proposal (Modern Web Guidance guide `dialog`, Rule 1): render `<dialog>` opened with `showModal()` from an effect via ref, `aria-label` kept, no `role`/`aria-modal`/trap/`inert`; `closedby="any"` plus the guide's pointer-position fallback where `closedBy` is missing (Safari), `cancel`/`close` events call `onClose`; move `.modal-overlay` styling to `dialog::backdrop`, add `dialog:modal { overscroll-behavior: contain }` and the backdrop rule; scope any `display` to `dialog[open]`.
+- Why not applied automatically: it changes dismissal and focus semantics for every dialog (top layer, browser focus return, Esc via `cancel`, click-outside needs fallback code in Safari), touches shared CSS and needs new E2E assertions (Esc, backdrop click, Tab containment, focus return, 320 px layout). AGENTS.md requires modal focus handling to stay intact, so this needs a reviewed change with Peter's go.
+- Effort: about 1 component, about 40 lines CSS, about 4 E2E tests; no new dependency.
