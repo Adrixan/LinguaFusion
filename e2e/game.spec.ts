@@ -267,3 +267,99 @@ test('all tabs render and the collection loads lazily without console errors', a
   await expect(page.locator('.stats-grid')).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test.describe('native modal dialog', () => {
+  const openSettings = async (page: Page) => {
+    const opener = page.getByRole('button', { name: 'Einstellungen öffnen' });
+    await opener.focus();
+    await page.keyboard.press('Enter');
+    const dialog = page.getByRole('dialog', { name: 'Einstellungen' });
+    await expect(dialog).toBeVisible();
+    await expect.poll(() => dialog.evaluate(element => (element as HTMLDialogElement).matches(':modal'))).toBe(true);
+    return { opener, dialog };
+  };
+  const focusInsideDialog = (page: Page) => page.evaluate(() => !!document.activeElement?.closest('dialog[open]'));
+
+  test.beforeEach(async ({ page }) => {
+    await seedSave(page, baseSave);
+    await page.goto('/');
+  });
+
+  test('Escape closes it and focus returns to the opener', async ({ page }) => {
+    const { opener, dialog } = await openSettings(page);
+    expect(await focusInsideDialog(page)).toBe(true);
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await expect(opener).toBeFocused();
+  });
+
+  test('a backdrop click closes it, a click on its padding does not', async ({ page }) => {
+    const { opener, dialog } = await openSettings(page);
+    const box = (await dialog.boundingBox())!;
+    await page.mouse.click(box.x + 4, box.y + box.height / 2);
+    await expect(dialog).toBeVisible();
+    await page.mouse.click(4, 4);
+    await expect(dialog).toHaveCount(0);
+    await expect(opener).toBeFocused();
+  });
+
+  test('Tab and Shift+Tab never reach the page behind the dialog', async ({ page }) => {
+    await openSettings(page);
+    // A native modal lets focus leave to the browser UI (document.body is active) after the last control, so
+    // keyboard users can reach the address bar; the next press cycles back into the dialog, never the page.
+    const focusOwner = () => page.evaluate(() => {
+      const active = document.activeElement;
+      if (active?.closest('dialog[open]')) return 'dialog';
+      return active === document.body || active === null ? 'browser' : 'page';
+    });
+    for (const key of ['Tab', 'Shift+Tab']) {
+      let previous = 'dialog';
+      for (let i = 0; i < 16; i++) {
+        await page.keyboard.press(key);
+        const owner = await focusOwner();
+        expect(owner, `${key} #${i + 1}`).not.toBe('page');
+        if (previous === 'browser') expect(owner, `${key} #${i + 1} returns to the dialog`).toBe('dialog');
+        previous = owner;
+      }
+    }
+  });
+
+  test('a toast raised while the dialog is open shows above the backdrop', async ({ page }) => {
+    const { dialog } = await openSettings(page);
+    page.on('dialog', prompt => { void prompt.accept(); });
+    await page.locator('input[type=file]').setInputFiles({ name: 'x.json', mimeType: 'application/json', buffer: Buffer.from('{"hello":1}') });
+    const toast = page.locator('.toast');
+    await expect(toast).toContainText('kein gültiger Spielstand');
+    expect(await toast.evaluate(element => element.matches(':popover-open'))).toBe(true);
+    await expect(dialog).toBeVisible();
+  });
+
+  test('light dismiss works without closedby support (Safari fallback)', async ({ page }) => {
+    await page.addInitScript(() => { delete (HTMLDialogElement.prototype as { closedBy?: string }).closedBy; });
+    await page.reload();
+    expect(await page.evaluate(() => 'closedBy' in HTMLDialogElement.prototype)).toBe(false);
+    const { opener, dialog } = await openSettings(page);
+    const box = (await dialog.boundingBox())!;
+    await page.mouse.click(box.x + 4, box.y + box.height / 2);
+    await expect(dialog).toBeVisible();
+    // A drag that starts inside and ends on the backdrop (text selection) must not dismiss.
+    await page.mouse.move(box.x + 20, box.y + 20);
+    await page.mouse.down();
+    await page.mouse.move(4, 4);
+    await page.mouse.up();
+    await expect(dialog).toBeVisible();
+    await page.mouse.click(4, 4);
+    await expect(dialog).toHaveCount(0);
+    await expect(opener).toBeFocused();
+  });
+
+  test('the dialog fits a 320px viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    const { dialog } = await openSettings(page);
+    const box = (await dialog.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(320);
+    expect(box.y + box.height).toBeLessThanOrEqual(640);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  });
+});

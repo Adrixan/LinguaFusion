@@ -10,6 +10,7 @@ import BadgeDisplay from './components/BadgeDisplay';
 import TutorialOverlay from './components/TutorialOverlay';
 import BadgeModal from './components/BadgeModal';
 import Modal from './components/Modal';
+import Notice from './components/Notice';
 import SettingsModal from './components/SettingsModal';
 import StatsDisplay from './components/StatsDisplay';
 import VocabularyReview from './components/VocabularyReview';
@@ -111,15 +112,15 @@ function App() {
       )}
 
       {game.persistenceError && (
-        <div className="persistence-warning" role="alert">
+        <Notice className="persistence-warning" role="alert">
           Spielstand konnte nicht gespeichert werden. Exportiere deinen Fortschritt, bevor du die Seite verlässt.
           <button type="button" onClick={handleExport}>Jetzt exportieren</button>
-        </div>
+        </Notice>
       )}
       {game.saveConflict && (
-        <div className="persistence-warning" role="alert">
+        <Notice className="persistence-warning" role="alert">
           Ein anderer Tab hat neueren Fortschritt gespeichert. Dessen Spielstand wurde übernommen. Spiele bitte nur in einem Tab gleichzeitig.
-        </div>
+        </Notice>
       )}
 
       <main className="main-content">
@@ -217,9 +218,9 @@ function App() {
       )}
 
       {toast && (
-        <div className="toast" role="status">
+        <Notice key={toast} className="toast" role="status">
           {toast}
-        </div>
+        </Notice>
       )}
     </div>
   );
